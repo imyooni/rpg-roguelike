@@ -26,6 +26,8 @@ const config = {
     }
 };
 
+const game = new Phaser.Game(config);
+
 window.addEventListener('resize', () => {
     config.scale.width = window.innerWidth;
     config.scale.height = window.innerHeight;
@@ -51,7 +53,6 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault(); 
 });
 
-const game = new Phaser.Game(config);
 ///////////
 // board //
 ///////////

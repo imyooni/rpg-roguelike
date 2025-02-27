@@ -26,14 +26,16 @@ const config = {
     }
 };
 
-
+const game = new Phaser.Game(config);
 
 // Adjust scale dynamically when the window is resized
 window.addEventListener('resize', () => {
     config.scale.width = window.innerWidth;
     config.scale.height = window.innerHeight;
     // Force Phaser to update the scale when the window is resized
-    game.scale.refresh();
+    if (game) {
+       game.scale.refresh();   
+    }
 });
 
 // Adjust the aspect ratio and dimensions based on the screen size
@@ -49,7 +51,10 @@ if (screenAspectRatio > aspectRatio) {
 }
 
 // Make sure to call refresh after changing the scale settings
-game.scale.refresh();
+if (game) {
+  game.scale.refresh();    
+ }
+
 
 // Disable right-click context menu
 document.addEventListener('contextmenu', (event) => {
@@ -57,7 +62,7 @@ document.addEventListener('contextmenu', (event) => {
 });
 
 // Create the game instance
-const game = new Phaser.Game(config);
+
 
 ///////////
 // board //

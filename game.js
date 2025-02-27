@@ -11,16 +11,41 @@ const config = {
     width: 800,  // Base game width
     height: 600, // Base game height
     scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.FIT,  // Keep FIT mode
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: window.innerWidth,
-        height: window.innerHeight
-    },    
+        height: window.innerHeight,
+        max: {
+            width: window.innerWidth,
+            height: window.innerHeight
+        }
+    },
     scene: {
         preload: preload,
         create: create
     }
 };
+
+window.addEventListener('resize', () => {
+    config.scale.width = window.innerWidth;
+    config.scale.height = window.innerHeight;
+    // Force Phaser to update the scale when the window is resized
+    game.scale.refresh();
+});
+
+const aspectRatio = 800 / 600;
+const screenAspectRatio = window.innerWidth / window.innerHeight;
+
+if (screenAspectRatio > aspectRatio) {
+    config.scale.width = window.innerWidth;
+    config.scale.height = window.innerWidth / aspectRatio;
+} else {
+    config.scale.height = window.innerHeight;
+    config.scale.width = window.innerHeight * aspectRatio;
+}
+
+game.scale.refresh();
+
 
 document.addEventListener('contextmenu', (event) => {
     event.preventDefault(); 

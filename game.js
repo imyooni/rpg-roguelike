@@ -26,8 +26,7 @@ const config = {
     }
 };
 
-// Create the game instance
-const game = new Phaser.Game(config);
+
 
 // Adjust scale dynamically when the window is resized
 window.addEventListener('resize', () => {
@@ -57,6 +56,8 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
+// Create the game instance
+const game = new Phaser.Game(config);
 
 ///////////
 // board //

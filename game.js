@@ -1,7 +1,7 @@
 
-import { loadAudio } from '/assets/Scripts/audio.js';
-import { loadSprites } from '/assets/Scripts/sprites.js';
-import { loadAnimations } from '/assets/Scripts/animations.js';
+import { loadAudio } from './assets/Scripts/audio.js';
+import { loadSprites } from './assets/Scripts/sprites.js';
+import { loadAnimations } from './assets/Scripts/animations.js';
 
 import * as main from './main_functions.js';
 import * as sprites_fn from './sprites_functions.js';

@@ -1,15 +1,15 @@
-export function PiecesBg(scene,rows,cols,baseBoardPos,spacing) {
+export function PiecesBg(scene,rows,cols,baseBoardPos,spacing,size) {
     for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
             let posX = (baseBoardPos[0]+22)+ x * spacing;
             let posY = (baseBoardPos[1]+20) + y * spacing;
             let pieceBack1 = scene.add.graphics();
             pieceBack1.fillStyle(0x000000, 1); 
-            pieceBack1.fillRect(posX - 16, posY - 16, 32, 32); 
+            pieceBack1.fillRect(posX - 16, posY - 16, size, size); 
             pieceBack1.setDepth(0);
             let pieceBack2 = scene.add.graphics();
             pieceBack2.fillStyle(0xE6E6FA, 1); 
-            pieceBack2.fillRect(posX - 15, posY - 15, 30, 30); 
+            pieceBack2.fillRect(posX - 15, posY - 15, size-2, size-2); 
             pieceBack2.setDepth(0);
         }
     }

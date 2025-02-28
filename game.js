@@ -10,14 +10,18 @@ width = window.innerWidth * window.devicePixelRatio;
 height = window.innerHeight * window.devicePixelRatio;
 
 const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+  type: Phaser.AUTO,
+  scale: {
+    mode: Scale.FIT,
+    width: window.innerWidth * window.devicePixelRatio,
+    height: window.innerHeight * window.devicePixelRatio
+  },
     scene: {
         preload: preload,
-        create: create
-    }
-};
+        create: create,
+        update: update
+    } 
+ },
 
 const game = new Phaser.Game(config);
 

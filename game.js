@@ -11,12 +11,8 @@ height = window.innerHeight * window.devicePixelRatio;
 
 const config = {
     type: Phaser.AUTO,
-    width: width,
-    height: height,
-    scale: {
-        mode: Phaser.Scale.FIT,  // Keep FIT mode
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
+    width: 800,
+    height: 600,
     scene: {
         preload: preload,
         create: create

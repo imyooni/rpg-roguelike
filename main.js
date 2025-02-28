@@ -16,7 +16,7 @@ canvas.style.top = `${borderHeight}px`;
 ctx.scale(window.devicePixelRatio, window.devicePixelRatio); // Scale context for high DPI screens
 
 
-const gridSize = 10; // Grid size (6x6)
+const gridSize = 8; // Grid size (6x6)
 const cellSize = 36; // Cell size (36x36)
 const spacing = 4; // Spacing between cells
 

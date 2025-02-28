@@ -40,7 +40,7 @@ document.addEventListener('contextmenu', (event) => {
 // board //
 ///////////
 let baseBoardPos = [100,250]
-let pieceSize = 42
+let pieceSize = 32
 let cols = 5;
 let rows = 10;
 let pieces = new Array(cols*rows).fill(null);

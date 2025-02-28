@@ -12,13 +12,7 @@ const config = {
     height: 1600, // Base game height
     scale: {
         mode: Phaser.Scale.FIT,  // Keep FIT mode
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        max: {
-            width: window.innerWidth,
-            height: window.innerHeight
-        }
+        autoCenter: Phaser.Scale.CENTER_BOTH
     },
     scene: {
         preload: preload,
@@ -40,7 +34,7 @@ document.addEventListener('contextmenu', (event) => {
 // board //
 ///////////
 let baseBoardPos = [100,250]
-let pieceSize = 46
+let pieceSize = 48
 let cols = 5;
 let rows = 10;
 let pieces = new Array(cols*rows).fill(null);

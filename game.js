@@ -6,22 +6,17 @@ import { loadAnimations } from './assets/Scripts/animations.js';
 import * as main from './main_functions.js';
 import * as sprites_fn from './sprites_functions.js';
 
-width = window.innerWidth * window.devicePixelRatio;
-height = window.innerHeight * window.devicePixelRatio;
 
 var config = {
-  type: Phaser.AUTO,
-  scale: {
-    mode: Scale.FIT,
+    type: Phaser.AUTO,
     width: window.innerWidth * window.devicePixelRatio,
-    height: window.innerHeight * window.devicePixelRatio
-  },
+    height: window.innerHeight * window.devicePixelRatio,
     scene: {
         preload: preload,
         create: create,
         update: update
-    } 
- }
+    }
+};
 
 const game = new Phaser.Game(config);
 

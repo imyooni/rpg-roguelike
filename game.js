@@ -9,7 +9,7 @@ import * as sprites_fn from './sprites_functions.js';
 width = window.innerWidth * window.devicePixelRatio;
 height = window.innerHeight * window.devicePixelRatio;
 
-const config = {
+var config = {
   type: Phaser.AUTO,
   scale: {
     mode: Scale.FIT,

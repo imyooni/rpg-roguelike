@@ -6,10 +6,13 @@ import { loadAnimations } from './assets/Scripts/animations.js';
 import * as main from './main_functions.js';
 import * as sprites_fn from './sprites_functions.js';
 
+width = window.innerWidth * window.devicePixelRatio;
+height = window.innerHeight * window.devicePixelRatio;
+
 const config = {
     type: Phaser.AUTO,
-    width: 720,  // Base game width
-    height: 1600, // Base game height
+    width: width,
+    height: height,
     scale: {
         mode: Phaser.Scale.FIT,  // Keep FIT mode
         autoCenter: Phaser.Scale.CENTER_BOTH

@@ -9,37 +9,84 @@ body {
 
 .container {
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* Center contents horizontally */
     position: relative;
-}
-
-.border {
-    width: 100%;
-    height: 20px; /* Fixed height for borders */
-    background: #8a8c8e; /* Border color */
-    position: absolute;
-    border-top: 1px solid black; /* Black border at the top */
-    border-bottom: 1px solid black; /* Black border at the bottom */
-}
-
-.top-border {
-    top: 0;
-}
-
-.bottom-border {
-    bottom: 0;
-}
-
-.grid-container {
-    display: grid;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .grid-item {
     background: #708090;
     border: 1px solid black;
     box-sizing: border-box;
+    position: relative; /* Necessary for absolute positioning of the border */
+}
+
+/* Highlight selected item with a fading border */
+.grid-item.selected {
+    position: relative;
+}
+
+/* Create the fading border using a pseudo-element */
+.grid-item.selected::before {
+    content: ''; /* Empty content for the pseudo-element */
+    position: absolute;
+    top: -1px; /* Add units (px) */
+    left: -1px; /* Add units (px) */
+    width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: 1px;
+    background-color: transparent;
+    animation: fade-border 500ms infinite alternate; /* Fade-in and out effect */
+}
+
+/* Animation for fading border */
+@keyframes fade-border {
+    0% {
+        border-color: #FFD700; /* Start with the gold border */
+    }
+    50% {
+        border-color: #FFD700; /* Keep the gold color while fading */
+    }
+    100% {
+        border-color: #ffffff
+    }
+}
+
+.grid-container {
+    display: grid;
+    padding: 5px; /* Create a 5px gap around the grid */
+    background-color: #2b2d42; /* Border fill color */
+    border-radius: 5px; /* Optional: Adds rounded corners to the grid's border */
+    border: 1px solid black; /* 1px black border around the grid container */
+    margin-bottom: 15px; /* Adds space between grid and money display */
+    grid-template-columns: repeat(8, 36px);
+    grid-template-rows: repeat(8, 36px);
+    gap: 4px;
+    width: calc(8 * 36px + 7 * 4px); /* Width based on grid size + gaps */
+}
+
+.money-border {
+    width: calc(8 * 36px + 7 * 4px); /* Same width as grid container */
+    height: 25px;
+    background-color: #333; /* Dark background color */
+    color: #a3b18a;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    border-top: 1px solid black; /* Add a border above the money section */
+}
+
+.money-label {
+    font-weight: bold;
+}
+
+#money-value {
+    margin-left: 10px;
+    font-weight: bold;
 }

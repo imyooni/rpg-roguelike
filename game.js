@@ -8,8 +8,8 @@ import * as sprites_fn from './sprites_functions.js';
 
 const config = {
     type: Phaser.AUTO,
-    width: 800,  // Base game width
-    height: 600, // Base game height
+    width: 720,  // Base game width
+    height: 1600, // Base game height
     scale: {
         mode: Phaser.Scale.FIT,  // Keep FIT mode
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -27,34 +27,6 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-
-// Adjust scale dynamically when the window is resized
-window.addEventListener('resize', () => {
-    config.scale.width = window.innerWidth;
-    config.scale.height = window.innerHeight;
-    // Force Phaser to update the scale when the window is resized
-    if (game) {
-       game.scale.refresh();   
-    }
-});
-
-// Adjust the aspect ratio and dimensions based on the screen size
-const aspectRatio = 800 / 600;
-const screenAspectRatio = window.innerWidth / window.innerHeight;
-
-if (screenAspectRatio > aspectRatio) {
-    config.scale.width = window.innerWidth;
-    config.scale.height = window.innerWidth / aspectRatio;
-} else {
-    config.scale.height = window.innerHeight;
-    config.scale.width = window.innerHeight * aspectRatio;
-}
-
-// Make sure to call refresh after changing the scale settings
-if (game) {
-  game.scale.refresh();    
- }
-
 
 // Disable right-click context menu
 document.addEventListener('contextmenu', (event) => {

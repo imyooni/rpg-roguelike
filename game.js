@@ -40,12 +40,13 @@ document.addEventListener('contextmenu', (event) => {
 // board //
 ///////////
 let baseBoardPos = [100,250]
+let pieceSize = 40
 let cols = 5;
 let rows = 10;
 let pieces = new Array(cols*rows).fill(null);
 let borderSprites = [];
 let blankSprites = [];
-let spacing = 35
+let spacing = pieceSize + 3
 let selectedPieces = [];
 let selectedValue = 0;
 let uniqueIDCounter = 0; 
@@ -64,7 +65,7 @@ function update() {}
 
 function create() {
     createSprites(this)
-    sprites_fn.PiecesBg(this,rows,cols,baseBoardPos,spacing)
+    sprites_fn.PiecesBg(this,rows,cols,baseBoardPos,spacing,pieceSize)
     loadAnimations(this);
     main.createText(this,0xffffff)
 }

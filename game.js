@@ -63,7 +63,22 @@ function create() {
     sprites_fn.PiecesBg(this,rows,cols,baseBoardPos,spacing,pieceSize)
     loadAnimations(this);
     main.createText(this,0xffffff)
+
+        // Set initial zoom level
+    camera.setZoom(1);
+
+    // Listen for wheel event
+    this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ, event) => {
+        if (event.ctrlKey) {  // Check if Ctrl is pressed
+            let zoom = camera.zoom - deltaY * 0.001;
+            camera.setZoom(Phaser.Math.Clamp(zoom, 0.5, 3)); // Clamp zoom between 0.5x and 3x
+        }
+    });
 }
+
+window.addEventListener('resize', () => {
+    game.scale.resize(window.innerWidth, window.innerHeight);
+});
 
 
 function createSprites(scene) {

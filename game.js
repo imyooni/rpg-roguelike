@@ -9,11 +9,8 @@ import * as sprites_fn from './sprites_functions.js';
 
 var config = {
     type: Phaser.AUTO,
-  scale: {
-    mode: Scale.FIT,
     width: window.innerWidth * window.devicePixelRatio,
-    height: window.innerHeight * window.devicePixelRatio
-  },
+    height: window.innerHeight * window.devicePixelRatio,
     scene: {
         preload: preload,
         create: create,

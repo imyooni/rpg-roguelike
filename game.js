@@ -61,8 +61,6 @@ function preload() {
 function update() {}
 
 function create() {
-    this.scale.displaySize.setAspectRatio(720/1600);
-    this.scale.refresh();
     createSprites(this)
     sprites_fn.PiecesBg(this,rows,cols,baseBoardPos,spacing,pieceSize)
     loadAnimations(this);

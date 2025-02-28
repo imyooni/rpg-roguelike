@@ -63,15 +63,13 @@ function create() {
     sprites_fn.PiecesBg(this,rows,cols,baseBoardPos,spacing,pieceSize)
     loadAnimations(this);
     main.createText(this,0xffffff)
+        this.cameras.main.setZoom(1); // Set default zoom
 
-        // Set initial zoom level
-    camera.setZoom(1);
-
-    // Listen for wheel event
+    // Listen for mouse wheel event
     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ, event) => {
-        if (event.ctrlKey) {  // Check if Ctrl is pressed
-            let zoom = camera.zoom - deltaY * 0.001;
-            camera.setZoom(Phaser.Math.Clamp(zoom, 0.5, 3)); // Clamp zoom between 0.5x and 3x
+        if (event.ctrlKey) { // Only zoom if Ctrl is held
+            let newZoom = this.cameras.main.zoom - deltaY * 0.001;
+            this.cameras.main.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 3)); // Limit zoom range
         }
     });
 }
@@ -79,7 +77,6 @@ function create() {
 window.addEventListener('resize', () => {
     game.scale.resize(window.innerWidth, window.innerHeight);
 });
-
 
 function createSprites(scene) {
     main.createBackground(scene);

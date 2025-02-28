@@ -20,11 +20,6 @@ var config = {
 
 const game = new Phaser.Game(config);
 
-// Disable right-click context menu
-document.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-});
-
 // Create the game instance
 
 

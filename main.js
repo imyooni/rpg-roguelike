@@ -1,117 +1,254 @@
+let selectedPieceValue = 0;
+let selectedPieces = [];
+let shopPieces = [];
+
+document.addEventListener('contextmenu', (event) => {
+    event.preventDefault(); 
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-    const gridSize = 8; // Grid size (8x8)
-    const cellSize = 36; // Cell size (36x36)
-    const spacing = 4; // Spacing between cells
-    
+    const gridSize = 8;
+    const cellSize = 36;
+    const spacing = 4;
+
+    const shopContainer = document.querySelector(".shop-grid");
     const gridContainer = document.querySelector(".grid-container");
 
-    // Set grid layout using whole pixel values
     gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gap = `${spacing}px`;
+    
+    shopContainer.style.gridTemplateColumns = `repeat(${3}, ${cellSize}px)`;
+    shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
+    shopContainer.style.gap = `${spacing}px`;
 
-    // Create an array to hold the grid items
-    let gridItems = [];
+    let gridItems = []; 
 
-    // Load the spritesheet image
     const spritesheet = new Image();
-    spritesheet.src = "./assets/Sprites/numbers.png"; // Replace with your actual spritesheet path
+    spritesheet.src = "./assets/Sprites/numbers.png";
 
+
+ 
     spritesheet.onload = function() {
-        // Clear any old grid items
-        gridContainer.innerHTML = "";
 
-        // Create the grid with sharp, integer pixel sizes
+        shopContainer.innerHTML = "";
+        for (let i = 0; i < 6; i++) {
+            const cell = document.createElement("div");
+            cell.classList.add("shop-item");
+            cell.style.width = `${cellSize}px`;
+            cell.style.height = `${cellSize}px`;
+            cell.style.position = "relative";
+            const shopCanvas = document.createElement("canvas");
+            shopCanvas.width = cellSize;
+            shopCanvas.height = cellSize;
+            const ctx = shopCanvas.getContext("2d");
+            ctx.imageSmoothingEnabled = false;
+            const randomNumber = Math.floor(Math.random() * 9) + 1;
+            const spriteX = (randomNumber - 1) * 36;
+            const spriteY = 0;
+            const offsetX = (cellSize - 36) / 2;
+            const offsetY = (cellSize - 36) / 2;
+            ctx.drawImage(spritesheet, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+            cell.appendChild(shopCanvas);
+            shopContainer.appendChild(cell);
+            shopPieces.push({
+                element: cell,
+                canvas: shopCanvas,
+                enabled: true,
+                points: 1,
+                price: Math.floor(Math.random() * 5000) + 1,
+                value: randomNumber,
+                isSelected: false,
+            });
+        }
+
+
+        gridContainer.innerHTML = "";
         for (let i = 0; i < gridSize * gridSize; i++) {
             const cell = document.createElement("div");
             cell.classList.add("grid-item");
             cell.style.width = `${cellSize}px`;
             cell.style.height = `${cellSize}px`;
-            cell.style.position = "relative"; // Add relative positioning to the grid item
-
-            // Create a canvas element inside each grid item
+            cell.style.position = "relative";
             const canvas = document.createElement("canvas");
             canvas.width = cellSize;
             canvas.height = cellSize;
-
             const ctx = canvas.getContext("2d");
-
-            // Disable image smoothing for pixelated effect
             ctx.imageSmoothingEnabled = false;
-
-            // Generate a random number between 1 and 9
             const randomNumber = Math.floor(Math.random() * 9) + 1;
-
-            // Calculate the position of the sprite on the spritesheet
-            const spriteX = (randomNumber - 1) * 36; // Adjust for 36x36 sprite size
-            const spriteY = 0; // All sprites are on the first row (adjust if your spritesheet is arranged differently)
-
-            // Draw the selected sprite from the spritesheet onto the canvas, centered in the grid cell
-            const offsetX = (cellSize - 37) / 2; // Horizontal offset to center the sprite
-            const offsetY = (cellSize - 37) / 2; // Vertical offset to center the sprite
-
-            // Draw the sprite centered within the 36x36 grid cell
+            const spriteX = (randomNumber - 1) * 36;
+            const spriteY = 0;
+            const offsetX = (cellSize - 37) / 2;
+            const offsetY = (cellSize - 37) / 2;
             ctx.drawImage(spritesheet, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-
-            // Now append the canvas (which contains the centered sprite) to the grid item
             cell.appendChild(canvas);
-
-            // Append the cell to the grid container
             gridContainer.appendChild(cell);
-
-            // Add the grid item object to the array, initialized with properties
             gridItems.push({
                 element: cell,
                 canvas: canvas,
-                isSelected: false, // To track if the cell is selected
-             //   gif: null // To store the GIF element if any
+                enabled: true,
+                points: 1,
+                value: randomNumber,
+                isSelected: false,
             });
         }
+
+        shopPieces.forEach(item => {
+            item.element.classList.add("tooltip"); // Add tooltip class to the element
+        
+            const tooltip = document.createElement("span");
+            tooltip.classList.add("tooltip-text");
+            tooltip.innerText = `$${item.price}`; // Set the text dynamically
+        
+            item.element.appendChild(tooltip); // Append the tooltip to the item
+        });
+        
+ 
     };
 
-    // Add click event listener to gridContainer
-    gridContainer.addEventListener('click', function(event) {
-        const clickedItem = event.target.closest('.grid-item'); // Get the grid item, regardless of whether canvas or other part is clicked
 
-        // Check if the clicked item is a valid grid item
-        if (clickedItem) {
-            const index = gridItems.findIndex(item => item.element === clickedItem);
-
-            if (index !== -1) {
-                const gridItem = gridItems[index];
-
-                // Toggle the selection state
-                gridItem.isSelected = !gridItem.isSelected;
-
-
-                // Optionally, toggle a border (or any other style changes) on the clicked item
-                clickedItem.classList.toggle('selected');
-            }
+ 
+    const audioCache = {};
+    function playAudio(filePath) {
+        if (!audioCache[`./assets/Audio/${filePath}`]) {
+            audioCache[`./assets/Audio/${filePath}`] = new Audio(`./assets/Audio/${filePath}`);
+        }
+        const audio = audioCache[`./assets/Audio/${filePath}`];
+        audio.currentTime = 0; 
+        audio.play();
+    }
+    
+    document.addEventListener('click', function(event) {
+        let clickedItem = event.target.closest('.grid-item, .shop-item');
+    
+        // If clicking on a canvas inside a grid-item or shop-item, find the correct parent
+        if (!clickedItem && event.target.tagName === 'CANVAS') {
+            clickedItem = event.target.closest('.grid-item, .shop-item');
+        }
+    
+        if (!clickedItem) {
+            return;
+        }
+    
+    
+        // Check if it's a grid item
+        let gridItem = gridItems.find(item => item.element === clickedItem);
+        
+        // Check if it's a shop item
+        let shopItem = shopPieces.find(item => item.element === clickedItem);
+    
+        if (gridItem) {
+            console.log("Grid item clicked:", gridItem);
+            handleGridClick(gridItem, clickedItem);
+        } else if (shopItem) {
+            console.log("Shop item clicked:", shopItem);
+            handleShopClick(shopItem, clickedItem);
+        } else {
+            console.log("Item found but not recognized.");
         }
     });
-
-    // Function to update the money display (to be called after setting up)
-    let money = 100; // Initial money value
-
-    function updateMoney(value) {
-        money = value;
-        const moneyElement = document.getElementById("money-value");
-        if (moneyElement) {
-            moneyElement.textContent = money;
+    
+    function handleGridClick(gridItem, element) {
+        if (!gridItem.enabled) return;
+    
+        playAudio('/SFX/System_Selected_Piece.ogg');
+        gridItem.isSelected = !gridItem.isSelected;
+        element.classList.toggle('selected');
+    
+        if (gridItem.isSelected) {
+            selectedPieces.push(gridItem);
+            selectedPieceValue += gridItem.value;
         } else {
-            console.error("Money element not found.");
+            selectedPieces = selectedPieces.filter(item => item !== gridItem);
+            selectedPieceValue -= gridItem.value;
+        }
+    
+        HandlePieceAction(gridItem);
+    }
+    
+    function handleShopClick(shopItem, element) {
+        playAudio('/SFX/System_Selected_Piece.ogg');
+        const alreadySelected = shopItem.isSelected; 
+        for (let i = 0; i < shopPieces.length; i++) {
+            if (shopPieces[i].isSelected) {
+                shopPieces[i].element.classList.remove("selected");
+                shopPieces[i].isSelected = false;
+                break; // ✅ Stops the loop immediately
+            }
+        }
+        if (!alreadySelected) {
+            shopItem.element.classList.add("selected");
+            shopItem.isSelected = true;
+        }
+    }
+    
+
+    function HandlePieceAction(piece) {
+        if (selectedPieceValue === 10) {
+            hideSelectedPieces();
+            playAudio('/SFX/System_Money.ogg')
+            playAudio('/SFX/System_Selected_ok.ogg')
         }
     }
 
-    // Call updateMoney to set the initial value
-    updateMoney(money);
+  function hideSelectedPieces() {
+    let totalPoints = 0
+    selectedPieces.forEach(item => {
+        item.element.classList.add("green-flash"); 
+        item.element.classList.remove("selected")
+        item.enabled = false;
+        totalPoints += item.points
+        setTimeout(() => {
+          //  item.element.style.opacity = 0;
+            item.canvas.style.opacity = 0
+            item.element.classList.remove("green-flash"); 
+        }, 500);
+    });
+    updateMoneyDisplay(totalPoints*selectedPieces.length);
+    selectedPieceValue = 0;
+    selectedPieces = [];
+}
 
-    // Optionally, you can add a function to increase money after some action
-    function increaseMoney(amount) {
-        updateMoney(money + amount);
+    
+
+    let money = 0 //Math.floor(Math.random() * 9999999);
+    updateMoneyDisplay(0)
+
+    function updateMoneyDisplay(value) {
+        let startMoney = money;
+        let targetMoney = money + value;
+        let duration = 300; 
+        let steps = 20; 
+        let stepTime = duration / steps;
+        let currentStep = 0;
+        function animateStep() {
+            currentStep++;
+            let progress = currentStep / steps;
+            let easingProgress = 1 - Math.pow(1 - progress, 3);
+            let animatedValue = Math.floor(startMoney + (targetMoney - startMoney) * easingProgress);
+            renderMoney(animatedValue);
+            if (currentStep < steps) {
+                setTimeout(animateStep, stepTime);
+            } else {
+             money = targetMoney; 
+            }
+        }
+        animateStep();
+    }
+    
+    // Function to update the money display
+    function renderMoney(amount) {
+        const moneyDisplay = document.getElementById('money-display');
+        moneyDisplay.innerHTML = '';
+        const numberStr = amount.toString().padStart(7, '0'); 
+        for (let i = 0; i < numberStr.length; i++) {
+            const digit = numberStr[i];
+            const digitElement = document.createElement('span');
+            const digitWidth = 22;
+            digitElement.style.backgroundPosition = `-${digit * digitWidth}px 0`;
+            moneyDisplay.appendChild(digitElement);
+        }
     }
 
-    // For example, increase money by 10 after 2 seconds
-    setTimeout(() => increaseMoney(10), 2000);
-});
 
+});

@@ -1,6 +1,7 @@
 let selectedPieceValue = 0;
 let selectedPieces = [];
 let shopPieces = [];
+let tooltip 
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -159,6 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
         gridItem.isSelected = !gridItem.isSelected;
         element.classList.toggle('selected');
     
+        if (tooltip) {
+           tooltip.classList.remove("show")
+           shopPieces.forEach(item => {
+            if (item.isSelected) {
+                item.element.classList.remove("selected");
+                item.isSelected = false;
+                item.element.querySelector(".tooltip-text").classList.remove("show");
+            }
+          });
+        }
+        
         if (gridItem.isSelected) {
             selectedPieces.push(gridItem);
             selectedPieceValue += gridItem.value;
@@ -172,31 +184,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function handleShopClick(shopItem, element) {
         playAudio('/SFX/System_Selected_Piece.ogg');
-        const alreadySelected = shopItem.isSelected; 
-        for (let i = 0; i < shopPieces.length; i++) {
-            if (shopPieces[i].isSelected) {
-                shopPieces[i].element.classList.remove("selected");
-                shopPieces[i].isSelected = false;
-                break; // ✅ Stops the loop immediately
+        const alreadySelected = shopItem.isSelected;
+     
+        tooltip = shopItem.element.querySelector(".tooltip-text");
+        // Deselect all items and hide tooltips
+        shopPieces.forEach(item => {
+            if (item.isSelected) {
+                item.element.classList.remove("selected");
+                item.isSelected = false;
+                item.element.querySelector(".tooltip-text").classList.remove("show");
             }
-        }
+        });
+    
         if (!alreadySelected) {
             shopItem.element.classList.add("selected");
             shopItem.isSelected = true;
+            tooltip.classList.add("show"); // Show Tooltip
         } else {
-            if (isMobile()) {
-                hideTooltips(); // Hide tooltips when the shop grid is clicked on mobile
-            }
+            tooltip.classList.remove("show"); // Hide Tooltip if already selected
         }
     }
     
-    // Function to hide tooltips
-    function hideTooltips() {
-        document.querySelectorAll(".tooltip-text").forEach(tooltip => {
-            tooltip.style.visibility = "hidden";
-            tooltip.style.opacity = "0";
-        });
-    }
+    
 
     function HandlePieceAction(piece) {
         if (selectedPieceValue === 10) {

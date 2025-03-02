@@ -183,9 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!alreadySelected) {
             shopItem.element.classList.add("selected");
             shopItem.isSelected = true;
+        } else {
+            if (isMobile()) {
+                hideTooltips(); // Hide tooltips when the shop grid is clicked on mobile
+            }
         }
     }
     
+    // Function to hide tooltips
+    function hideTooltips() {
+        document.querySelectorAll(".tooltip-text").forEach(tooltip => {
+            tooltip.style.visibility = "hidden";
+            tooltip.style.opacity = "0";
+        });
+    }
 
     function HandlePieceAction(piece) {
         if (selectedPieceValue === 10) {
@@ -253,20 +264,5 @@ document.addEventListener('DOMContentLoaded', () => {
             moneyDisplay.appendChild(digitElement);
         }
     }
-
-    // Function to hide tooltips
-function hideTooltips() {
-    document.querySelectorAll(".tooltip-text").forEach(tooltip => {
-        tooltip.style.visibility = "hidden";
-        tooltip.style.opacity = "0";
-    });
-}
-
-// Add event listener for clicking inside the shop grid
-document.querySelector(".shop-grid").addEventListener("click", function () {
-    if (isMobile()) {
-        hideTooltips(); // Hide tooltips when the shop grid is clicked on mobile
-    }
-});
 
 });

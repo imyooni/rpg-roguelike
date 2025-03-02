@@ -2,6 +2,10 @@ let selectedPieceValue = 0;
 let selectedPieces = [];
 let shopPieces = [];
 
+function isMobile() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 document.addEventListener('contextmenu', (event) => {
     event.preventDefault(); 
 });
@@ -250,5 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to hide tooltips
+function hideTooltips() {
+    document.querySelectorAll(".tooltip-text").forEach(tooltip => {
+        tooltip.style.visibility = "hidden";
+        tooltip.style.opacity = "0";
+    });
+}
+
+// Add event listener for clicking inside the shop grid
+document.querySelector(".shop-grid").addEventListener("click", function () {
+    if (isMobile()) {
+        hideTooltips(); // Hide tooltips when the shop grid is clicked on mobile
+    }
+});
 
 });

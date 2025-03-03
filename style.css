@@ -38,11 +38,17 @@ body {
 }
 
 .grid-item {
-    background: #708090;
+    width: 36px; 
+    height: 36px; 
+    background-color: #708090;
     border: 1px solid black;
-    box-sizing: border-box;
-    z-index: 4;
-    position: relative; /* Necessary for absolute positioning of the border */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-sizing: border-box; /* ✅ Fix border issue */
+    image-rendering: pixelated;
+    z-index: 2; /* Ensure grid items are above shuffle icon */
 }
 
 /* Highlight selected item with a fading border */
@@ -195,13 +201,13 @@ body {
 
 .shuffle-item {
     position: absolute;
-    bottom: 99%; 
+    bottom: 85%; 
     right: 5.5%;
     width: 34px; 
     height: 64px;
     display: flex;
     image-rendering: pixelated;
-    z-index: 10;
+    z-index: 1; /* Reduced z-index */
 }
 
 
@@ -330,11 +336,6 @@ body {
     user-select: none; /* Disable text selection */
 }
 
-.bubble-fade-out {
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-}
-
 @keyframes bubble-flash {
     0% { background-color: rgba(0, 192, 250, 0.8); transform: scale(1); opacity: 1; }
     50% { background-color: rgba(0, 171, 250, 0.5); transform: scale(1); opacity: 0.7; }
@@ -356,12 +357,12 @@ body {
 
 .piece-fade-out {
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
 }
 
 .piece-fade-in {
     opacity: 1;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.4s ease-in-out;
 }
 
 

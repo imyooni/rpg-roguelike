@@ -19,6 +19,39 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
+let audioContext, bgmSource, gainNode;
+
+async function playBGM() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode = audioContext.createGain(); // Create volume control
+
+        const response = await fetch('./assets/Audio/BGM/bgm001.ogg');
+        const audioData = await response.arrayBuffer();
+        const buffer = await audioContext.decodeAudioData(audioData);
+
+        bgmSource = audioContext.createBufferSource();
+        bgmSource.buffer = buffer;
+        bgmSource.loop = true;
+
+        bgmSource.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        bgmSource.start();
+        gainNode.gain.value = 0.5; // 50% volume
+    }
+}
+
+document.body.addEventListener("click", playBGM, { once: true });
+
+// Example: Adjust volume dynamically
+function setVolume(value) {
+    if (gainNode) {
+        gainNode.gain.value = value; // Value between 0 and 1
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const shopContainer = document.querySelector(".shop-grid");
     const gridContainer = document.querySelector(".grid-container");
@@ -84,6 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    const audioCache = {};
+    function playAudio(filePath) {
+        if (!audioCache[`./assets/Audio/${filePath}`]) {
+            audioCache[`./assets/Audio/${filePath}`] = new Audio(`./assets/Audio/${filePath}`);
+        }
+        const audio = audioCache[`./assets/Audio/${filePath}`];
+        audio.currentTime = 0;
+        audio.play();
+    }
+
     function generateShopPieces() {
         shopContainer.innerHTML = "";
         for (let i = 0; i < 6; i++) {
@@ -104,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.imageSmoothingEnabled = false;
         reRollButton.addEventListener('click', function () {
             if (reRollButton.classList.contains("shake")) {
-               return
+                return
             }
             let emptySpaces = []
             for (let index = 0; index < gridItems.length; index++) {
@@ -119,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     reRollButton.classList.remove("shake");
                 }, 150);
-                return  
+                return
             }
             reRolls -= 1
             playAudio('/SFX/System_ReRoll.ogg');
@@ -127,7 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (emptySpaces.length > 0) {
                 for (let index = 0; index < emptySpaces.length; index++) {
                     const piece = gridItems[emptySpaces[index]];
-                    piece.canvas.classList.add("piece-fade-in");
+                    piece.canvas.style.transition = "opacity 0.5s";
+                    piece.canvas.style.opacity = "1";
                     generatePiece(emptySpaces[index], gridContainer, "grid-item")
                     piece.element.classList.add("shake");
                 }
@@ -139,11 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     piece.element.classList.remove("shake");
                 }
             }, 150);
-            let spriteX = reRolls * 34; 
+            let spriteX = reRolls * 34;
             let spriteY = 0;
             let offsetX = 0;
             let offsetY = 0;
-            ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height); 
+            ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
             ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
         });
         let spriteX = reRolls * 34;
@@ -154,45 +199,75 @@ document.addEventListener('DOMContentLoaded', () => {
         reRollButton.appendChild(reRollcanvas);
         document.querySelector(".shuffle-item").appendChild(reRollButton);
     }
-    
+
 
     function generatePiece(index, container, classId) {
+        let specialValue;
+        if (classId === 'shop-item') {
+            specialValue = 0.60;
+        } else {
+            specialValue = 0.80;
+        }
         function getRandomChoice() {
-            return Math.random() < 0.80 ? 'normal' : 'special';
+            return Math.random() < specialValue ? 'normal' : 'special';
         }
         let pieceChoice = getRandomChoice();
-        let spriteKey, points = 1, pieceType, enabled = true, randomNumber, spriteX, spriteY, offsetX, value, offsetY; 
+        let spriteKey, points = 1, pieceType, enabled = true, randomNumber, spriteX, spriteY, offsetX, value, offsetY;
         if (pieceChoice === "normal") {
             pieceType = 'numbers';
             spriteKey = spritesheets.numbers;
             randomNumber = Math.floor(Math.random() * 10) + 1;
             if (randomNumber === 10) {
-            value = Math.floor(Math.random() * 9) + 1;
+                value = Math.floor(Math.random() * 9) + 1;
             } else {
-             value = randomNumber; 
+                value = randomNumber;
             }
         } else {
-            let specialPiece = getRandomTypeByProbabilityWithDisableEffect();
-            let specialTypesList = ["blocked", "yooni", "bubble", "shop", "zul", "shuffle", "colors", "roman"];
-            let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
-            spriteKey = specialIndex[0];
-            randomNumber = specialIndex[1];
-            enabled = specialIndex[2];
-            points = specialIndex[3];
-            pieceType = specialPiece;
-            if (pieceType == 'roman') {
-                points = 2;
-                spriteKey = spritesheets.roman;
-                randomNumber = Math.floor(Math.random() * 9) + 1;
+            let specialPiece = getRandomTypeByProbabilityWithDisableEffect(classId);
+            if (specialPiece === null) {
+                pieceType = 'numbers';
+                spriteKey = spritesheets.numbers;
+                randomNumber = Math.floor(Math.random() * 10) + 1;
+                if (randomNumber === 10) {
+                    value = Math.floor(Math.random() * 9) + 1;
+                } else {
+                    value = randomNumber;
+                }
+            } else {
+                let specialTypesList = [
+                    "blocked", "star", "bubble", "shop", "zul", 
+                    "reroll", "colors", "roman", "bomb"];
+                let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
+                spriteKey = specialIndex[0];
+                randomNumber = specialIndex[1];
+                enabled = specialIndex[2];
+                points = specialIndex[3];
+                pieceType = specialPiece;
+                if (pieceType == 'roman') {
+                    points = 2;
+                    spriteKey = spritesheets.roman;
+                    randomNumber = Math.floor(Math.random() * 9) + 1;
+                }
+                value = randomNumber;
             }
-          value = randomNumber; 
         }
         spriteX = (randomNumber - 1) * 36;
         spriteY = 0;
         offsetX = (cellSize - 36) / 2;
         offsetY = (cellSize - 36) / 2;
-        if (gridItems[index]) {
-            let existingItem = gridItems[index];
+        let piecesListIndex
+        if (classId === "grid-item") {
+            piecesListIndex = gridItems[index]
+        } else {
+            piecesListIndex = shopItems[index]
+        }
+        if (piecesListIndex) {
+            let existingItem;
+            if (classId === "grid-item") {
+                existingItem = gridItems[index]
+            } else {
+                existingItem = shopItems[index]
+            }
             let ctx = existingItem.canvas.getContext("2d");
             ctx.clearRect(0, 0, cellSize, cellSize);
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
@@ -208,7 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.style.height = `${cellSize}px`;
             cell.style.position = "relative";
             const canvas = document.createElement("canvas");
-            canvas.classList.add("piece-fade-out");
+            canvas.style.transition = "opacity 0.5s";
+            canvas.style.opacity = "0";
             canvas.width = cellSize;
             canvas.height = cellSize;
             const ctx = canvas.getContext("2d");
@@ -227,8 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSelected: false,
             };
             requestAnimationFrame(() => {
-                pieceData.canvas.classList.remove("piece-fade-out");
-                pieceData.canvas.classList.add("piece-fade-in");
+                canvas.style.transition = "opacity 0.5s";
+                canvas.style.opacity = "1";
             });
             if (classId === "grid-item") {
                 gridItems[index] = pieceData
@@ -242,39 +318,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    function getSpecialData(index) {
-        let specialArray = [
-            [spritesheets.special, 1, false, 0], // blocked 
-            [spritesheets.special, 2, true, 2], // yooni
-            [spritesheets.special, 3, 'hide', 3], // bubble
-            [spritesheets.special, 4, true, 0], // shop
-            [spritesheets.zul, Math.floor(Math.random() * 3) + 1, true, 0], // zul
-            [spritesheets.special, 5, true, 0], // shuffle
-            [spritesheets.colors, Math.floor(Math.random() * 9) + 1, true, 2], // colors 
-            [spritesheets.roman, Math.floor(Math.random() * 9) + 1, true, 2], // roman
-        ]
-        return specialArray[index]
-    }
-
-    function getRandomTypeByProbabilityWithDisableEffect() {
-        let shuffleList = 0
+    function getRandomTypeByProbabilityWithDisableEffect(classId) {
+        let enabledPieces = new Array(9).fill(true);
+        if (classId === 'shop-item') {
+            enabledPieces[2] = false;
+        }
         for (let i = 0; i < gridItems.length; i++) {
             if (gridItems[i] === null) continue
-            if (gridItems[i].type === 'shuffle') {
-                shuffleList += 1
+            if (gridItems[i].type === 'reroll') {
+                enabledPieces[6] = false
                 break
             }
         }
         const typesWithProbabilities = [
-            { type: "colors", probability: 0.4, enabled: true },
-            { type: "roman", probability: 0.2, enabled: true },
-            { type: "blocked", probability: 0.1, enabled: true },
-            { type: "bubble", probability: 0.1, enabled: true },
-            { type: "yooni", probability: 0.05, enabled: true },
-            { type: "shop", probability: 0.05, enabled: true },
-            { type: "shuffle", probability: 0.04, enabled: shuffleList < 1 },
-            { type: "zul", probability: 0.02, enabled: true },
+            { type: "colors", probability: 0.4, enabled: enabledPieces[0] },
+            { type: "roman", probability: 0.2, enabled: enabledPieces[1] },
+            { type: "blocked", probability: 0.1, enabled: enabledPieces[2] },
+            { type: "bubble", probability: 0.07, enabled: enabledPieces[3] },
+            { type: "star", probability: 0.05, enabled: enabledPieces[4] },
+            { type: "shop", probability: 0.05, enabled: enabledPieces[5] },
+            { type: "reroll", probability: 0.04, enabled: enabledPieces[6] },
+            { type: "zul", probability: 0.02, enabled: enabledPieces[7] },
+            { type: "bomb", probability: 0.03, enabled: enabledPieces[8] },
         ];
         const totalProbability = typesWithProbabilities.reduce((sum, item) => sum + item.probability, 0);
         if (totalProbability !== 1) {
@@ -292,74 +357,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        return "blocked";
+        return null;
+    }
+    function getSpecialData(index) {
+        let specialArray = [
+            [spritesheets.special, 1, false, 0], // blocked 
+            [spritesheets.special, 2, true, 2], // star
+            [spritesheets.special, 3, 'hide', 3], // bubble
+            [spritesheets.special, 4, true, 0], // shop
+            [spritesheets.zul, Math.floor(Math.random() * 3) + 1, true, 5], // zul
+            [spritesheets.special, 5, true, 0], // shuffle
+            [spritesheets.colors, Math.floor(Math.random() * 9) + 1, true, 3], // colors 
+            [spritesheets.roman, Math.floor(Math.random() * 9) + 1, true, 2], // roman
+            [spritesheets.special, 6, true, 0], // bomb
+        ]
+        return specialArray[index]
     }
 
-    
-    const audioCache = {};
-    function playAudio(filePath) {
-        if (!audioCache[`./assets/Audio/${filePath}`]) {
-            audioCache[`./assets/Audio/${filePath}`] = new Audio(`./assets/Audio/${filePath}`);
-        }
-        const audio = audioCache[`./assets/Audio/${filePath}`];
-        audio.currentTime = 0;
-        audio.play();
-    }
-
-    document.addEventListener('click', function (event) {
-        let clickedItem = event.target.closest('.grid-item, .shop-item');
-        if (!clickedItem && event.target.tagName === 'CANVAS') {
-            clickedItem = event.target.closest('.grid-item, .shop-item');
-        }
-        if (!clickedItem) {
-            return;
-        }
-        let gridItem = gridItems.find(item => item.element === clickedItem);
-        let shopItem = shopItems.find(item => item.element === clickedItem);
-        if (gridItem) {
-            handleGridClick(gridItem, clickedItem);
-        } else if (shopItem) {
-            handleShopClick(shopItem, clickedItem);
-        }
-    });
-
-    function handleGridClick(gridItem, element) {
-        if (gridItem.enabled === false) {
-            playAudio('/SFX/System_Piece_Disabled.ogg');
-            gridItem.enabled = 'hide'
-            gridItem.element.classList.add("shake");
-            setTimeout(() => {
-                gridItem.element.classList.remove("shake");
-                gridItem.enabled = false
-            }, 150);
-            return
-        } else if (gridItem.enabled === 'hide' || gridItem.enabled === 'empty') {
-            return
-        }
-        playAudio('/SFX/System_Selected_Piece.ogg');
-        gridItem.isSelected = !gridItem.isSelected;
-        element.classList.toggle('selected');
-        if (tooltip) {
-            tooltip.classList.remove("show")
-            shopItems.forEach(item => {
-                if (item.isSelected) {
-                    item.element.classList.remove("selected");
-                    item.isSelected = false;
-                    item.element.querySelector(".tooltip-text").classList.remove("show");
-                }
-            });
-        }
-        if (gridItem.isSelected) {
-            selectedPieces.push(gridItem);
-            selectedPieceValue += gridItem.value;
-        } else {
-            selectedPieces = selectedPieces.filter(item => item !== gridItem);
-            selectedPieceValue -= gridItem.value;
-        }
-        HandlePieceAction(gridItem);
-    }
 
     function handleShopClick(shopItem, element) {
+        if (shopItem.enabled === 'empty') {
+            return
+        }
         playAudio('/SFX/System_Selected_Piece.ogg');
         const alreadySelected = shopItem.isSelected;
         tooltip = shopItem.element.querySelector(".tooltip-text");
@@ -379,11 +398,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    document.addEventListener('click', function (event) {
+        let clickedItem = event.target.closest('.grid-item, .shop-item');
+        if (!clickedItem && event.target.tagName === 'CANVAS') {
+            clickedItem = event.target.closest('.grid-item, .shop-item');
+        }
+        if (!clickedItem) {
+            return;
+        }
+        let gridItem = gridItems.find(item => item.element === clickedItem);
+        let shopItem = shopItems.find(item => item.element === clickedItem);
+        if (gridItem) {
+            handleGridClick(gridItem, clickedItem);
+        } else if (shopItem) {
+            handleShopClick(shopItem, clickedItem);
+        }
+    });
+
+    function disabledPiece(item) {
+        let oldState = item.enabled;
+        playAudio('/SFX/System_Piece_Disabled.ogg');
+        item.enabled = 'hide'
+        item.element.classList.add("shake");
+        setTimeout(() => {
+            item.element.classList.remove("shake");
+            item.enabled = oldState;
+        }, 150);
+    }
+
+    function handleGridClick(gridItem, element) {
+        if (gridItem.enabled === false) {
+            disabledPiece(gridItem)
+            return
+        } else if (gridItem.enabled === 'hide' || gridItem.enabled === 'empty') {
+            return
+        } else if (gridItem.type === 'star' && selectedPieces.length == 0) {
+            disabledPiece(gridItem)
+            return
+        }
+        if (gridItem.type === 'shop') {
+            updateShop(gridItem)
+            return
+        }
+        playAudio('/SFX/System_Selected_Piece.ogg');
+        gridItem.isSelected = !gridItem.isSelected;
+        element.classList.toggle('selected');
+        if (tooltip) {
+            tooltip.classList.remove("show")
+            shopItems.forEach(item => {
+                if (item.isSelected) {
+                    item.element.classList.remove("selected");
+                    item.isSelected = false;
+                    item.element.querySelector(".tooltip-text").classList.remove("show");
+                }
+            });
+        }
+        if (gridItem.isSelected) {
+            selectedPieces.push(gridItem);
+            if (gridItem.type === 'star') {
+             selectedPieceValue = 10;
+            } else {
+             selectedPieceValue += gridItem.value;
+            }
+        } else {
+            selectedPieces = selectedPieces.filter(item => item !== gridItem);
+            selectedPieceValue -= gridItem.value;
+        }
+        HandlePieceAction(gridItem);
+    }
+
     function HandlePieceAction(piece) {
         if (selectedPieceValue === 10) {
             hideSelectedPieces('success');
             playAudio('/SFX/System_Money.ogg');
-            playAudio('/SFX/System_Selected_ok.ogg');
+            setTimeout(() => {
+                playAudio('/SFX/System_Selected_ok.ogg');
+            }, 10);
         } else if (selectedPieceValue > 10) {
             hideSelectedPieces('wrong');
             playAudio('/SFX/System_Selected_Error.ogg');
@@ -400,7 +490,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 colorFlash = "red-flash"
             }
-            item.canvas.classList.add("piece-fade-out");
+            item.canvas.style.transition = "opacity 0.5s";
+            item.canvas.style.opacity = "0";
             item.element.classList.add(colorFlash);
             item.element.classList.remove("selected");
             item.enabled = 'empty';
@@ -411,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.element.addEventListener('animationend', function handleGreenFlashEnd(event) {
                 if (event.animationName === colorFlash) {
                     item.element.classList.remove(colorFlash);
-                    item.element.removeEventListener('animationend', handleGreenFlashEnd); // Clean up listener
+                    item.element.removeEventListener('animationend', handleGreenFlashEnd);
                 }
             });
         });
@@ -424,21 +515,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        selectedPieces.forEach(item => {
-            item.canvas.classList.remove("piece-fade-in");
-        });
+       // selectedPieces.forEach(item => {
+       //     item.canvas.classList.remove("piece-fade-in");
+       // });
         selectedPieceValue = 0;
         selectedPieces = [];
     }
 
+    function updateShop(item) {
+        item.enabled = 'empty';
+        item.canvas.style.transition = "opacity 0.5s";
+        item.canvas.style.opacity = "0";
+        playAudio('/SFX/System_Update_Shop.ogg');
+        for (let i = 0; i < shopItems.length; i++) {
+            shopItems[i].element.classList.add("shake");
+            shopItems[i].enabled = 'empty';
+            shopItems[i].canvas.style.transition = "opacity 0.5s";
+            shopItems[i].canvas.style.opacity = "0";
+            setTimeout(() => {
+                generatePiece(i, shopContainer, "shop-item")
+                shopItems[i].element.classList.remove("shake");
+                shopItems[i].canvas.style.transition = "opacity 0.5s";
+                shopItems[i].canvas.style.opacity = "1";
+            }, 500);
+        }
+    }
 
     function updateRoman(index) {
         let item = gridItems[index];
         item.canvas.classList.remove("piece-fade-in");
         if (item.type === 'roman' && item.enabled !== 'hide') {
             item.enabled = 'hide';
-            item.canvas.classList.remove("piece-fade-in");
-            item.canvas.classList.add("piece-fade-out");
+            item.canvas.style.transition = "opacity 0.5s";
+            item.canvas.style.opacity = "0";
             setTimeout(() => {
                 const ctx = item.canvas.getContext("2d");
                 ctx.clearRect(0, 0, item.canvas.width, item.canvas.height);
@@ -452,8 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const offsetY = (item.canvas.height - 36) / 2;
                 ctx.drawImage(spritesheets.roman, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
                 item.enabled = true;
-                item.canvas.classList.remove("piece-fade-out");
-                item.canvas.classList.add("piece-fade-in");
+                item.canvas.style.transition = "opacity 0.5s";
+                item.canvas.style.opacity = "1";
             }, 500);
         }
     }
@@ -472,7 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (bubble.type === "bubble" && bubble.enabled !== 'empty') {
                         selectedPieces.push(bubble)
                         bubble.enabled = 'empty';
-                        bubble.canvas.classList.add("piece-fade-out");                  
+                        bubble.canvas.style.transition = "opacity 0.5s";
+                        bubble.canvas.style.opacity = "0";
                         bubble.element.classList.add("bubble-flash");
                         bubblesDestroyed++;
                     }

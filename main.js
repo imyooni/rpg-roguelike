@@ -2,7 +2,12 @@ let selectedPieceValue = 0;
 let selectedPieces = [];
 let shopPieces = [];
 let tooltip;
+let gridItems = []; 
 let gridSize = 8;
+let cellSize = 36;
+let spacing = 4;
+let reRolls = 3; 
+let reRollButton; 
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -13,13 +18,9 @@ document.addEventListener('contextmenu', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
- 
-    const cellSize = 36;
-    const spacing = 4;
-
     const shopContainer = document.querySelector(".shop-grid");
     const gridContainer = document.querySelector(".grid-container");
-
+    const reRollContainer = document.querySelector(".shuffle-item");
     gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gap = `${spacing}px`;
@@ -27,15 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContainer.style.gridTemplateColumns = `repeat(${3}, ${cellSize}px)`;
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
-
-    let gridItems = []; 
-
-
-
-
+ 
 
 // Define multiple spritesheets
 const spritesheets = {
+    roll: new Image(),
     numbers: new Image(),
     colors: new Image(),
     roman: new Image(),
@@ -67,6 +64,10 @@ function loadSpritesheets() {
             spritesheets.zul.src = "./assets/Sprites/zul.png";
             spritesheets.zul.onload = resolve;
         }),
+        new Promise((resolve) => {
+            spritesheets.roll.src = "./assets/Sprites/reRollButton.png";
+            spritesheets.roll.onload = resolve;
+        }),
         // Add more promises for additional spritesheets
     ];
 
@@ -75,6 +76,7 @@ function loadSpritesheets() {
         // Once all spritesheets are loaded, generate the grid and shop pieces
     //    generateShopPieces();
         generateGridPieces();
+        createReroll();
     });
 }
 
@@ -258,6 +260,43 @@ function generateShopPieces() {
 
 
 
+function createReroll() {
+    // Create the new shuffle button
+    reRollButton = document.createElement("div"); // Store the element in reRollButton
+    reRollButton.classList.add("shuffle-item");
+    reRollButton.style.width = `34px`;
+    reRollButton.style.height = `64px`;
+    reRollButton.style.position = "relative";
+
+    const reRollcanvas = document.createElement("canvas");
+    reRollcanvas.width = 34;
+    reRollcanvas.height = 64;
+    const ctx = reRollcanvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    let spriteX = 1 * 34;
+    let spriteY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
+
+    reRollButton.appendChild(reRollcanvas);
+    
+    // Append reRollButton to the DOM, inside the target container
+    document.querySelector(".shuffle-item").appendChild(reRollButton);
+
+    // Attach the click event listener after appending the element to the DOM
+    reRollButton.addEventListener('click', function() {
+        playAudio('/SFX/System_ReRoll.ogg');
+        reRollButton.classList.add("shake");
+        setTimeout(() => {
+            reRollButton.classList.remove("shake");
+            }, 150); // Adjust timing as needed
+    });
+}
+
+
+
+
 // 🎮 Load all spritesheets before generating pieces
 loadSpritesheets();
  
@@ -351,9 +390,12 @@ loadSpritesheets();
 
     function HandlePieceAction(piece) {
         if (selectedPieceValue === 10) {
-            hideSelectedPieces();
-            playAudio('/SFX/System_Money.ogg')
-            playAudio('/SFX/System_Selected_ok.ogg')
+            hideSelectedPieces('success');
+            playAudio('/SFX/System_Money.ogg');
+            playAudio('/SFX/System_Selected_ok.ogg');
+        } else if (selectedPieceValue > 10) { 
+            hideSelectedPieces('wrong');
+            playAudio('/SFX/System_Selected_Error.ogg');
         }
     }
 
@@ -361,35 +403,43 @@ loadSpritesheets();
 
     
 
-    function hideSelectedPieces() {
+    function hideSelectedPieces(mode) {
         let totalPoints = 0;
         let romanSize = 0;
         let bubbles = 0
+        let colorFlash
         selectedPieces.forEach(item => {
+            if (mode === 'success') {
+             colorFlash = "gold-flash"
+            } else {
+             colorFlash = "red-flash" 
+            }
             item.canvas.classList.add("piece-fade-out");
-            item.element.classList.add("green-flash");
+            item.element.classList.add(colorFlash);
             item.element.classList.remove("selected");
             item.enabled = "hide";
-           // item.type = null;
-            totalPoints += item.points;
-            bubbles += destroyNearbyBubble(gridItems.indexOf(item));
+            if (mode === 'success') {
+             totalPoints += item.points;
+             bubbles += destroyNearbyBubble(gridItems.indexOf(item));
+            }
             item.element.addEventListener('animationend', function handleGreenFlashEnd(event) {
-                if (event.animationName === 'green-flash') {
-                    // Once the green-flash animation ends, remove the class
-                    item.element.classList.remove("green-flash");
+                if (event.animationName === colorFlash) {
+                    item.element.classList.remove(colorFlash);
                     item.element.removeEventListener('animationend', handleGreenFlashEnd); // Clean up listener
                 }
             });
         });
-        for (let i = 0; i < gridItems.length; i++) { 
-          if (gridItems[i].type === 'roman' && gridItems[i].enabled) {
-            romanSize += 1
-            updateRoman(i);
-          }  
-        } 
         if (romanSize > 0) {playAudio('/SFX/System_Roman_Update.ogg')}
         if (bubbles > 0) {playAudio('/SFX/System_Bubble_Pop.ogg')}
+        if (mode === 'success') {
+            for (let i = 0; i < gridItems.length; i++) { 
+                if (gridItems[i].type === 'roman' && gridItems[i].enabled) {
+                  romanSize += 1
+                  updateRoman(i);
+                }  
+              } 
         updateMoneyDisplay(totalPoints * selectedPieces.length);
+        }
         selectedPieceValue = 0;
         selectedPieces = [];
     }
@@ -434,7 +484,7 @@ loadSpritesheets();
                 if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
                     let bubble = gridItems[newIndex];
                     if (bubble.type === "bubble") {
-                        bubble.type = null
+                        bubble.type = null;
                         bubble.canvas.classList.add("bubble-fade-out");
                         bubble.element.classList.add("bubble-flash");
                         bubblesDestroyed++;

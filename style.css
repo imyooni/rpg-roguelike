@@ -61,7 +61,7 @@ body {
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
-    animation: pieces-anim 500ms infinite alternate; /* Fade-in and out effect */
+    animation: pieces-anim 500ms infinite linear; /* Fade-in and out effect */
 }
 
 @keyframes pieces-anim {
@@ -195,17 +195,15 @@ body {
 
 .shuffle-item {
     position: absolute;
-    background-image: url('./assets/Sprites/shuffleButton.png');
     bottom: 99%; 
     right: 5.5%;
     width: 34px; 
     height: 64px;
     display: flex;
-    justify-content: right;
-    align-items: right;
     image-rendering: pixelated;
     z-index: 10;
 }
+
 
 .empty-border {
     position: absolute;
@@ -257,13 +255,13 @@ body {
     background-repeat: no-repeat;
 }
 
-@keyframes green-flash {
+@keyframes gold-flash {
     0% { background-color: rgba(250, 225, 0, 0.8); transform: scale(1); opacity: 1; }
     50% { background-color: rgba(250, 233, 0, 0.5); transform: scale(1); opacity: 0.7; }
     100% { background-color: transparent; transform: scale(1.2); opacity: 0; }
 }
 
-.grid-item.green-flash::after {
+.grid-item.gold-flash::after {
     content: ''; 
     position: absolute;
     top: 0;  /* Ensures it aligns perfectly with the piece */
@@ -272,7 +270,25 @@ body {
     height: 100%;
     border-radius: 5px; /* Optional rounded corners */
     z-index: 5; /* Ensures it stays behind the piece */
-    animation: green-flash 0.5s ease-in-out;
+    animation: gold-flash 0.5s ease-in-out;
+}
+
+@keyframes red-flash {
+    0% { background-color: rgba(250, 0, 0, 0.8); transform: scale(1); opacity: 1; }
+    50% { background-color: rgba(250, 0, 0, 0.5); transform: scale(1); opacity: 0.7; }
+    100% { background-color: transparent; transform: scale(1.2); opacity: 0; }
+}
+
+.grid-item.red-flash::after {
+    content: ''; 
+    position: absolute;
+    top: 0;  /* Ensures it aligns perfectly with the piece */
+    left: 0; /* Ensures it aligns perfectly with the piece */
+    width: 100%;
+    height: 100%;
+    border-radius: 5px; /* Optional rounded corners */
+    z-index: 5; /* Ensures it stays behind the piece */
+    animation: red-flash 0.5s ease-in-out;
 }
 
 .tooltip-text {

@@ -294,7 +294,13 @@ loadSpritesheets();
     
     function handleGridClick(gridItem, element) {
         if (gridItem.enabled === false) {
-         playAudio('/SFX/System_Piece_Disabled.ogg');  
+         playAudio('/SFX/System_Piece_Disabled.ogg');
+         gridItem.enabled = 'hide'
+         gridItem.element.classList.add("shake");
+           setTimeout(() => {
+          gridItem.element.classList.remove("shake");
+          gridItem.enabled = false
+          }, 150); // Adjust timing as needed
          return
         } else if (gridItem.enabled === 'hide') {
          return
@@ -364,7 +370,7 @@ loadSpritesheets();
             item.element.classList.add("green-flash");
             item.element.classList.remove("selected");
             item.enabled = "hide";
-            item.type = null;
+           // item.type = null;
             totalPoints += item.points;
             bubbles += destroyNearbyBubble(gridItems.indexOf(item));
             item.element.addEventListener('animationend', function handleGreenFlashEnd(event) {

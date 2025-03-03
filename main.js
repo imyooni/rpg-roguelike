@@ -348,7 +348,7 @@ loadSpritesheets();
 
 for (let i = 0; i < gridItems.length; i++){
    if (gridItems[i].enabled === 'hide') {
-  gridItems[i].canvas.classList.add(piece-fade-in)
+  gridItems[i].canvas.classList.add('piece-fade-in')
   }
   } 
 }

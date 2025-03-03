@@ -273,7 +273,7 @@ function createReroll() {
     reRollcanvas.height = 64;
     const ctx = reRollcanvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
-    let spriteX = 1 * 34;
+    let spriteX = reRolls * 34;
     let spriteY = 0;
     let offsetX = 0;
     let offsetY = 0;

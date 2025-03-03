@@ -344,14 +344,6 @@ loadSpritesheets();
         } else if (gridItem.enabled === 'hide') {
          return
         }
-     if (gridItem.type === 'shuffle') {
-
-for (let i = 0; i < gridItems.length; i++){
-   if (gridItems[i].enabled === 'hide') {
-  gridItems[i].canvas.classList.add('piece-fade-in')
-  }
-  } 
-}
         playAudio('/SFX/System_Selected_Piece.ogg');
         gridItem.isSelected = !gridItem.isSelected;
         element.classList.toggle('selected');

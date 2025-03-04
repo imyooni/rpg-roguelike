@@ -336,33 +336,43 @@ body {
     user-select: none; /* Disable text selection */
 }
 
-@keyframes bubble-flash {
-    0% { background-color: rgba(0, 192, 250, 0.8); transform: scale(1); opacity: 1; }
-    50% { background-color: rgba(0, 171, 250, 0.5); transform: scale(1); opacity: 0.7; }
-    100% { background-color: transparent; transform: scale(1.2); opacity: 0; }
+@keyframes piece-flash {
+    0% { background-color: var(--piece-color-start, rgba(255, 255, 255, 0.8)); transform: scale(1); opacity: 1; }
+    50% { background-color: var(--piece-color-mid, rgba(255, 255, 255, 0.5)); transform: scale(1); opacity: 0.7; }
+    100% { background-color: transparent; transform: scale(1); opacity: 0; }
 }
 
-.grid-item.bubble-flash::after {
+.grid-item.piece-flash::after {
     content: ''; 
     position: absolute;
-    top: 0;  /* Ensures it aligns perfectly with the piece */
-    left: 0; /* Ensures it aligns perfectly with the piece */
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 5px; /* Optional rounded corners */
-    z-index: 5; /* Ensures it stays behind the piece */
-    animation: bubble-flash 0.2s ease-in-out;
+    border-radius: 5px;
+    z-index: 5;
+    animation: piece-flash 0.2s ease-in-out;
 }
 
-
-.piece-fade-out {
+.tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none; /* Prevents interfering with clicks */
+    transform: translateX(-50%);
+    top: -40px; /* Adjust based on positioning */
+    left: 50%;
+    transition: opacity 0.2s ease-in-out;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
 }
 
-.piece-fade-in {
+.tooltip.show {
     opacity: 1;
-    transition: opacity 0.3s ease-in-out;
 }
 
 

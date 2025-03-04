@@ -37,14 +37,13 @@ async function playBGM() {
         bgmSource.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        bgmSource.start();
+        //   bgmSource.start();
         gainNode.gain.value = 0.5; // 50% volume
     }
 }
 
 document.body.addEventListener("click", playBGM, { once: true });
 
-// Example: Adjust volume dynamically
 function setVolume(value) {
     if (gainNode) {
         gainNode.gain.value = value; // Value between 0 and 1
@@ -55,6 +54,7 @@ function setVolume(value) {
 document.addEventListener('DOMContentLoaded', () => {
     const shopContainer = document.querySelector(".shop-grid");
     const gridContainer = document.querySelector(".grid-container");
+    const reRollcanvas = document.createElement("canvas");
 
     gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
@@ -135,26 +135,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updateReRollImage(ctx, reRollcanvas) {
+        let spriteX = reRolls * 34;
+        let spriteY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+        ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
+        ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
+    }
+    
     function createReroll() {
         reRollButton = document.createElement("div");
         reRollButton.classList.add("shuffle-item");
         reRollButton.style.width = `34px`;
         reRollButton.style.height = `64px`;
         reRollButton.style.position = "absolute";
-        const reRollcanvas = document.createElement("canvas");
         reRollcanvas.width = 34;
         reRollcanvas.height = 64;
         const ctx = reRollcanvas.getContext("2d");
         ctx.imageSmoothingEnabled = false;
+        updateReRollImage(ctx, reRollcanvas);
         reRollButton.addEventListener('click', function () {
             if (reRollButton.classList.contains("shake")) {
-                return
+                return;
             }
-            let emptySpaces = []
+            let emptySpaces = [];
             for (let index = 0; index < gridItems.length; index++) {
                 const piece = gridItems[index];
                 if (piece.enabled === 'empty') {
-                    emptySpaces.push(index)
+                    emptySpaces.push(index);
                 }
             }
             if (reRolls <= 0 || emptySpaces.length <= 0) {
@@ -163,9 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     reRollButton.classList.remove("shake");
                 }, 150);
-                return
+                return;
             }
-            reRolls -= 1
+            reRolls -= 1;
             playAudio('/SFX/System_ReRoll.ogg');
             reRollButton.classList.add("shake");
             if (emptySpaces.length > 0) {
@@ -173,10 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const piece = gridItems[emptySpaces[index]];
                     piece.canvas.style.transition = "opacity 0.5s";
                     piece.canvas.style.opacity = "1";
-                    generatePiece(emptySpaces[index], gridContainer, "grid-item")
+                    generatePiece(emptySpaces[index], gridContainer, "grid-item");
                     piece.element.classList.add("shake");
                 }
             }
+    
             setTimeout(() => {
                 reRollButton.classList.remove("shake");
                 for (let index = 0; index < emptySpaces.length; index++) {
@@ -184,21 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     piece.element.classList.remove("shake");
                 }
             }, 150);
-            let spriteX = reRolls * 34;
-            let spriteY = 0;
-            let offsetX = 0;
-            let offsetY = 0;
-            ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
-            ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
+            updateReRollImage(ctx, reRollcanvas);
         });
-        let spriteX = reRolls * 34;
-        let spriteY = 0;
-        let offsetX = 0;
-        let offsetY = 0;
-        ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
         reRollButton.appendChild(reRollcanvas);
         document.querySelector(".shuffle-item").appendChild(reRollButton);
     }
+    
 
 
     function generatePiece(index, container, classId) {
@@ -216,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pieceChoice === "normal") {
             pieceType = 'numbers';
             spriteKey = spritesheets.numbers;
-            randomNumber = Math.floor(Math.random() * 10) + 1;
+            randomNumber = getRandomNumber() 
             if (randomNumber === 10) {
                 value = Math.floor(Math.random() * 9) + 1;
             } else {
@@ -235,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 let specialTypesList = [
-                    "blocked", "star", "bubble", "shop", "zul", 
+                    "blocked", "star", "bubble", "shop", "zul",
                     "reroll", "colors", "roman", "bomb"];
                 let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
                 spriteKey = specialIndex[0];
@@ -303,6 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSelected: false,
             };
             requestAnimationFrame(() => {
+                cell.classList.remove("explosion");
                 canvas.style.transition = "opacity 0.5s";
                 canvas.style.opacity = "1";
             });
@@ -310,12 +312,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 gridItems[index] = pieceData
             } else if (classId === "shop-item") {
                 shopItems[index] = pieceData
-                const tooltip = document.createElement("span");
+                let tooltip = document.createElement("span");
                 tooltip.classList.add("tooltip-text");
                 tooltip.innerText = `$${pieceData.price}`;
                 pieceData.element.appendChild(tooltip);
             }
         }
+    }
+
+    function getRandomNumber() {
+        const numbersProbabilities = [
+            { type: 1, probability: 0.07 },
+            { type: 2, probability: 0.08 },
+            { type: 3, probability: 0.09 },
+            { type: 4, probability: 0.10 },
+            { type: 5, probability: 0.12 },
+            { type: 6, probability: 0.13 },
+            { type: 7, probability: 0.14 },
+            { type: 8, probability: 0.11 },
+            { type: 9, probability: 0.11 },
+            { type: 10, probability: 0.05 }
+        ];        
+        const totalProbability = numbersProbabilities.reduce((sum, item) => sum + item.probability, 0);
+        if (totalProbability !== 1) {
+            numbersProbabilities.forEach(item => {
+                item.probability /= totalProbability;
+            });
+        }
+        const randomValue = Math.random();
+        let cumulativeProbability = 0;
+        for (let i = 0; i < numbersProbabilities.length; i++) {
+                cumulativeProbability += numbersProbabilities[i].probability;
+                if (randomValue < cumulativeProbability) {
+                    return numbersProbabilities[i].type;
+                }
+        }
+        return 10;
     }
 
     function getRandomTypeByProbabilityWithDisableEffect(classId) {
@@ -359,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return null;
     }
+
     function getSpecialData(index) {
         let specialArray = [
             [spritesheets.special, 1, false, 0], // blocked 
@@ -398,22 +431,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.addEventListener('click', function (event) {
-        let clickedItem = event.target.closest('.grid-item, .shop-item');
-        if (!clickedItem && event.target.tagName === 'CANVAS') {
-            clickedItem = event.target.closest('.grid-item, .shop-item');
-        }
-        if (!clickedItem) {
+    
+
+    let pressTimer;
+    let isLongPress = false;
+    let preventClick = false;
+    let currentTooltip = null; // Track the current tooltip instance
+    
+    document.addEventListener("mousedown", function (event) {
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem) return;
+    
+        // Set up the long press timer
+        pressTimer = setTimeout(() => {
+            isLongPress = true; // Set the long press flag
+            preventClick = true; // Prevent the click event after long press
+            
+            // Only show tooltip if no existing tooltip is present
+            if (!currentTooltip) {
+                showTooltip(clickedItem, event);
+            }
+        }, 100); // Long press threshold (100ms)
+    });
+    
+    document.addEventListener("mouseup", function () {
+        clearTimeout(pressTimer);
+        if (isLongPress) {
+            // If it was a long press, don't trigger the click event
+            isLongPress = false;
             return;
         }
+    
+        // If it's a normal release, reset the preventClick flag
+        preventClick = false;
+        hideTooltip(); // Hide tooltip if no long press
+    });
+    
+    document.addEventListener("mouseleave", function () {
+        clearTimeout(pressTimer);
+        if (isLongPress) {
+            isLongPress = false;
+            return;
+        }
+    
+        preventClick = false; // Reset preventClick if mouse leaves
+        hideTooltip();
+    });
+    
+    document.addEventListener("touchstart", function (event) {
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem) return;
+    
+        pressTimer = setTimeout(() => {
+            isLongPress = true;
+            preventClick = true;
+    
+            // Only show tooltip if no existing tooltip is present
+            if (!currentTooltip) {
+                showTooltip(clickedItem, event);
+            }
+        }, 100); // Long press threshold (100ms)
+    });
+    
+    document.addEventListener("touchend", function () {
+        clearTimeout(pressTimer);
+        if (isLongPress) {
+            isLongPress = false;
+            return;
+        }
+    
+        preventClick = false;
+        hideTooltip();
+    });
+    
+    // Function to show the tooltip
+    function showTooltip(item, event) {
+        // If a tooltip already exists, hide the previous one first
+        if (currentTooltip) {
+            hideTooltip();
+        }
+    
+        // Create and display a new tooltip
+        currentTooltip = document.createElement("div");
+        currentTooltip.classList.add("tooltip");
+        currentTooltip.innerHTML = "This is a tooltip"; // Customize as needed
+    
+        // Position the tooltip
+        const rect = item.getBoundingClientRect();
+        currentTooltip.style.position = "absolute";
+        currentTooltip.style.left = `${rect.left + rect.width / 2}px`;
+        currentTooltip.style.top = `${rect.top - 10}px`; // Position above the item
+    
+        document.body.appendChild(currentTooltip);
+    }
+    
+    // Function to hide the tooltip
+    function hideTooltip() {
+        if (currentTooltip) {
+            currentTooltip.remove(); // Remove the tooltip from the DOM
+            currentTooltip = null; // Reset the currentTooltip variable
+        }
+    }
+    
+
+    
+    
+    // Normal click event
+    document.addEventListener("click", function (event) {
+        // If long press happened, prevent the click from firing
+        if (preventClick) {
+            preventClick = false; // Reset the flag after preventing the click
+            return; // Skip click event
+        }
+    
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem) return;
+    
         let gridItem = gridItems.find(item => item.element === clickedItem);
         let shopItem = shopItems.find(item => item.element === clickedItem);
+    
         if (gridItem) {
             handleGridClick(gridItem, clickedItem);
         } else if (shopItem) {
             handleShopClick(shopItem, clickedItem);
         }
     });
+    
+    
+    
 
     function disabledPiece(item) {
         let oldState = item.enabled;
@@ -432,12 +577,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return
         } else if (gridItem.enabled === 'hide' || gridItem.enabled === 'empty') {
             return
+        } else if (gridItem.type === 'reroll') {
+            updateRoll(gridItem)
+            return   
         } else if (gridItem.type === 'star' && selectedPieces.length == 0) {
             disabledPiece(gridItem)
             return
         }
         if (gridItem.type === 'shop') {
             updateShop(gridItem)
+            return
+        }
+        if (gridItem.type === 'bomb') {
+            bombExplode(gridItem)
             return
         }
         playAudio('/SFX/System_Selected_Piece.ogg');
@@ -454,12 +606,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         if (gridItem.isSelected) {
-            selectedPieces.push(gridItem);
+            let numbersList = selectedPieces.some(n => n.type === "numbers");
+            let colorsList = selectedPieces.some(n => n.type === "colors");
             if (gridItem.type === 'star') {
-             selectedPieceValue = 10;
+                selectedPieceValue = 10;
+            } else if ((gridItem.type === 'numbers' && colorsList) || (gridItem.type === 'colors' && numbersList)) {
+                selectedPieceValue = 11;
+            } else if (gridItem.type === 'colors') {
+               if (selectedPieces.length > 0) {
+                 if (selectedPieces[0].value === gridItem.value) {
+                    selectedPieceValue = 10
+                 } else {
+                    selectedPieceValue = 11
+                 }
+               } else {
+                selectedPieceValue += 0
+               }     
             } else {
-             selectedPieceValue += gridItem.value;
+                selectedPieceValue += gridItem.value;
             }
+            selectedPieces.push(gridItem);
         } else {
             selectedPieces = selectedPieces.filter(item => item !== gridItem);
             selectedPieceValue -= gridItem.value;
@@ -486,25 +652,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let colorFlash
         selectedPieces.forEach(item => {
             if (mode === 'success') {
-                colorFlash = "gold-flash"
+                colorFlash = ['rgba(250, 225, 0, 0.8)', 'rgba(255, 230, 0, 0.5)']
             } else {
-                colorFlash = "red-flash"
+                colorFlash = ['rgba(250, 0, 0, 0.8)', 'rgba(255, 0, 0, 0.5)']
             }
             item.canvas.style.transition = "opacity 0.5s";
             item.canvas.style.opacity = "0";
-            item.element.classList.add(colorFlash);
+            playFlashAnimation(item.element, colorFlash[0], colorFlash[1])
             item.element.classList.remove("selected");
             item.enabled = 'empty';
             if (mode === 'success') {
                 totalPoints += item.points;
                 bubbles += destroyNearbyBubble(gridItems.indexOf(item));
             }
-            item.element.addEventListener('animationend', function handleGreenFlashEnd(event) {
-                if (event.animationName === colorFlash) {
-                    item.element.classList.remove(colorFlash);
-                    item.element.removeEventListener('animationend', handleGreenFlashEnd);
-                }
-            });
         });
         if (bubbles > 0) { playAudio('/SFX/System_Bubble_Pop.ogg') }
         if (mode === 'success') {
@@ -515,17 +675,66 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-       // selectedPieces.forEach(item => {
-       //     item.canvas.classList.remove("piece-fade-in");
-       // });
         selectedPieceValue = 0;
         selectedPieces = [];
+    }
+
+    function updateRoll(piece) {
+        reRolls += 1
+        playAudio('/SFX/System_ReRoll.ogg');
+        piece.enabled = 'empty';
+        piece.canvas.style.transition = "opacity 0.5s";
+        piece.canvas.style.opacity = "0";
+        playFlashAnimation(piece.element, 'rgba(225, 150, 255, 0.8)', 'rgba(230, 129, 255, 0.5)')
+        const ctx = reRollcanvas.getContext("2d");
+        ctx.imageSmoothingEnabled = false;
+        updateReRollImage(ctx, reRollcanvas);
+        reRollButton.classList.add("shake");
+        reRollButton.addEventListener("animationend", () => {
+            reRollButton.classList.remove("shake");
+        });
+    }
+
+    function bombExplode(item) {
+        playAudio('/SFX/System_Explosion.ogg');
+        item.enabled = 'empty';
+        item.canvas.style.transition = "opacity 0.5s";
+        item.canvas.style.opacity = "0";
+        let centerIndex = gridItems.indexOf(item)
+        let centerX = centerIndex % gridSize;
+        let centerY = Math.floor(centerIndex / gridSize);
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                let newX = centerX + dx;
+                let newY = centerY + dy;
+                let newIndex = newY * gridSize + newX;
+                if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
+                    let piece = gridItems[newIndex];
+                    if (piece.enabled !== 'empty') {
+                        piece.enabled = 'empty';
+                        piece.canvas.style.transition = "opacity 0.5s";
+                        piece.canvas.style.opacity = "0";
+                        playFlashAnimation(piece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)')
+                    }
+                }
+            }
+        }
+    }
+
+    function playFlashAnimation(element, color1, color2) {
+        element.style.setProperty('--piece-color-start', color1);
+        element.style.setProperty('--piece-color-mid', color2);
+        element.classList.add('piece-flash');
+        element.addEventListener("animationend", () => {
+            element.classList.remove("piece-flash");
+        });
     }
 
     function updateShop(item) {
         item.enabled = 'empty';
         item.canvas.style.transition = "opacity 0.5s";
         item.canvas.style.opacity = "0";
+        playFlashAnimation(item.element, 'rgba(121, 250, 0, 0.8)', 'rgba(115, 255, 0, 0.5)')
         playAudio('/SFX/System_Update_Shop.ogg');
         for (let i = 0; i < shopItems.length; i++) {
             shopItems[i].element.classList.add("shake");
@@ -543,8 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateRoman(index) {
         let item = gridItems[index];
-        item.canvas.classList.remove("piece-fade-in");
-        if (item.type === 'roman' && item.enabled !== 'hide') {
+        if (item.type === 'roman' && item.enabled !== 'hide' && item.enabled !== 'empty') {
             item.enabled = 'hide';
             item.canvas.style.transition = "opacity 0.5s";
             item.canvas.style.opacity = "0";
@@ -579,11 +787,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
                     let bubble = gridItems[newIndex];
                     if (bubble.type === "bubble" && bubble.enabled !== 'empty') {
-                        selectedPieces.push(bubble)
                         bubble.enabled = 'empty';
                         bubble.canvas.style.transition = "opacity 0.5s";
                         bubble.canvas.style.opacity = "0";
-                        bubble.element.classList.add("bubble-flash");
+                        playFlashAnimation(bubble.element, 'rgba(0, 250, 250, 0.8)', 'rgba(0, 204, 255, 0.5)')
                         bubblesDestroyed++;
                     }
                 }

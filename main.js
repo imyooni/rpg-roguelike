@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tooltip.style.position = "absolute";
         tooltip.style.left = "50%";
-        tooltip.style.top = "50%";
+        tooltip.style.top = "18%";
         tooltip.style.transform = "translate(-50%, -50%)";
         tooltip.style.whiteSpace = "pre-wrap"; // Ensures \n works properly
 

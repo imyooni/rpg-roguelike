@@ -13,14 +13,16 @@ body {
 
 @font-face {
     font-family: 'DefaultFont';
-    src: url('./assets/Fonts/DefaultFont.ttf') format('woff2'), ;
+    src: url('./assets/Fonts/DefaultFont.woff2') format('woff2'),
+         url('./assets/Fonts/DefaultFont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'DefaultText';
-    src: url('./assets/Fonts/DefaultText.ttf') format('woff2'), ;
+    src: url('./assets/Fonts/DefaultText.woff2') format('woff2'),
+         url('./assets/Fonts/DefaultText.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }

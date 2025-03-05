@@ -15,8 +15,7 @@ body {
 
 @font-face {
     font-family: 'DefaultFont';
-    src: url('./assets/Fonts/DefaultFont.woff2') format('woff2'),
-         url('./assets/Fonts/DefaultFont.ttf') format('truetype');
+    src: url('./assets/Fonts/DefaultFont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }

@@ -7,22 +7,24 @@ body {
     background: #a1a9af; /* Primary background */
 }
 
+
 body {
     cursor: url('./assets/Sprites/cursor.png'), auto; /* Set the custom cursor */
 }
 
 @font-face {
     font-family: 'DefaultFont';
-    src: url('./assets/Fonts/DefaultFont.woff2') format('woff2'),
-         url('./assets/Fonts/DefaultFont.ttf') format('truetype');
+    src: url('/imyooni.github.io/rpg-roguelike/assets/Fonts/DefaultFont.woff2') format('woff2'),
+         url('/imyooni.github.io/rpg-roguelike/assets/Fonts/DefaultFont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
     font-family: 'DefaultText';
-    src: url('./assets/Fonts/DefaultText.woff2') format('woff2'),
-         url('./assets/Fonts/DefaultText.ttf') format('truetype');
+    src: url('/imyooni.github.io/rpg-roguelike/assets/Fonts/DefaultText.woff2') format('woff2'),
+         url('/imyooni.github.io/rpg-roguelike/assets/Fonts/DefaultText.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }

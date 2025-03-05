@@ -1,4 +1,7 @@
 
+
+import * as pieceData from './assets/Scripts/piecesData.js';
+
 let selectedPieceValue = 0;
 let selectedPieces = [];
 let shopItems = [];
@@ -10,6 +13,10 @@ let spacing = 4;
 let reRolls = 3;
 let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
+let specialTypesList = [
+    "blocked", "star", "bubble", "shop", "zul",
+    "reroll", "colors", "roman", "bomb", "fire",
+    "rainbow"];
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -143,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
         ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
     }
-    
+
     function createReroll() {
         reRollButton = document.createElement("div");
         reRollButton.classList.add("shuffle-item");
@@ -186,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     piece.element.classList.add("shake");
                 }
             }
-    
+
             setTimeout(() => {
                 reRollButton.classList.remove("shake");
                 for (let index = 0; index < emptySpaces.length; index++) {
@@ -199,33 +206,45 @@ document.addEventListener('DOMContentLoaded', () => {
         reRollButton.appendChild(reRollcanvas);
         document.querySelector(".shuffle-item").appendChild(reRollButton);
     }
-    
 
 
-    function generatePiece(index, container, classId) {
+
+    function generatePiece(index, container, classId, fixedType = null) {
         let specialValue;
         if (classId === 'shop-item') {
             specialValue = 0.60;
         } else {
-            specialValue = 0.80;
+            specialValue = 0.25;
         }
         function getRandomChoice() {
-            return Math.random() < specialValue ? 'normal' : 'special';
+            return Math.random() < specialValue ? 'special' : 'normal';
         }
         let pieceChoice = getRandomChoice();
-        let spriteKey, points = 1, pieceType, enabled = true, randomNumber, spriteX, spriteY, offsetX, value, offsetY;
-        if (pieceChoice === "normal") {
+        if (fixedType !== "normal" && fixedType !== null) {
+            pieceChoice = "special"
+        }
+        let spriteKey, id, points = 1, pieceType, enabled = true, randomNumber, spriteX, spriteY, offsetX, value, price, offsetY;
+        if (pieceChoice === "normal" || fixedType === "normal") {
+            id = 0;
+            price = pieceData.Price(0)
             pieceType = 'numbers';
             spriteKey = spritesheets.numbers;
-            randomNumber = getRandomNumber() 
+            randomNumber = getRandomNumber()
             if (randomNumber === 10) {
                 value = Math.floor(Math.random() * 9) + 1;
             } else {
                 value = randomNumber;
             }
         } else {
-            let specialPiece = getRandomTypeByProbabilityWithDisableEffect(classId);
+            let specialPiece;
+            if (fixedType === null) {
+                specialPiece = getRandomTypeByProbabilityWithDisableEffect(classId);
+            } else {
+                specialPiece = fixedType;
+            }
             if (specialPiece === null) {
+                id = 0;
+                price = pieceData.Price(0)
                 pieceType = 'numbers';
                 spriteKey = spritesheets.numbers;
                 randomNumber = Math.floor(Math.random() * 10) + 1;
@@ -235,20 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     value = randomNumber;
                 }
             } else {
-                let specialTypesList = [
-                    "blocked", "star", "bubble", "shop", "zul",
-                    "reroll", "colors", "roman", "bomb"];
                 let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
                 spriteKey = specialIndex[0];
                 randomNumber = specialIndex[1];
                 enabled = specialIndex[2];
                 points = specialIndex[3];
                 pieceType = specialPiece;
-                if (pieceType == 'roman') {
-                    points = 2;
-                    spriteKey = spritesheets.roman;
-                    randomNumber = Math.floor(Math.random() * 9) + 1;
-                }
+                price = pieceData.Price(specialTypesList.indexOf(specialPiece) + 1)
+                id = specialTypesList.indexOf(specialPiece) + 1;
                 value = randomNumber;
             }
         }
@@ -275,8 +288,16 @@ document.addEventListener('DOMContentLoaded', () => {
             existingItem.enabled = enabled;
             existingItem.points = points;
             existingItem.value = value;
+            existingItem.price = price;
+            existingItem.id = id;
             existingItem.type = pieceType;
             existingItem.isSelected = false;
+            if (classId === "shop-item") {
+                let tooltip = existingItem.element.querySelector(".tooltip-text");
+                if (tooltip) {
+                    tooltip.innerText = `$${existingItem.price}`;
+                }
+            }
         } else {
             const cell = document.createElement("div");
             cell.classList.add(classId);
@@ -296,15 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const pieceData = {
                 element: cell,
                 canvas: canvas,
+                id: id,
                 enabled: enabled,
                 points: points,
-                price: Math.floor(Math.random() * 5000) + 1,
+                price: price,
                 value: value,
                 type: pieceType,
                 isSelected: false,
             };
             requestAnimationFrame(() => {
-                cell.classList.remove("explosion");
                 canvas.style.transition = "opacity 0.5s";
                 canvas.style.opacity = "1";
             });
@@ -332,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { type: 8, probability: 0.11 },
             { type: 9, probability: 0.11 },
             { type: 10, probability: 0.05 }
-        ];        
+        ];
         const totalProbability = numbersProbabilities.reduce((sum, item) => sum + item.probability, 0);
         if (totalProbability !== 1) {
             numbersProbabilities.forEach(item => {
@@ -342,36 +363,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const randomValue = Math.random();
         let cumulativeProbability = 0;
         for (let i = 0; i < numbersProbabilities.length; i++) {
-                cumulativeProbability += numbersProbabilities[i].probability;
-                if (randomValue < cumulativeProbability) {
-                    return numbersProbabilities[i].type;
-                }
+            cumulativeProbability += numbersProbabilities[i].probability;
+            if (randomValue < cumulativeProbability) {
+                return numbersProbabilities[i].type;
+            }
         }
         return 10;
     }
 
     function getRandomTypeByProbabilityWithDisableEffect(classId) {
-        let enabledPieces = new Array(9).fill(true);
+        let enabledPieces = new Array(specialTypesList.length).fill(true);
         if (classId === 'shop-item') {
             enabledPieces[2] = false;
         }
         for (let i = 0; i < gridItems.length; i++) {
             if (gridItems[i] === null) continue
+            if (gridItems[i].type === 'fire') {
+                enabledPieces[9] = false
+            }
             if (gridItems[i].type === 'reroll') {
                 enabledPieces[6] = false
-                break
             }
         }
         const typesWithProbabilities = [
-            { type: "colors", probability: 0.4, enabled: enabledPieces[0] },
-            { type: "roman", probability: 0.2, enabled: enabledPieces[1] },
-            { type: "blocked", probability: 0.1, enabled: enabledPieces[2] },
-            { type: "bubble", probability: 0.07, enabled: enabledPieces[3] },
+            { type: "colors", probability: 0.36, enabled: enabledPieces[0] },
+            { type: "roman", probability: 0.18, enabled: enabledPieces[1] },
+            { type: "blocked", probability: 0.07, enabled: enabledPieces[2] },
+            { type: "bubble", probability: 0.06, enabled: enabledPieces[3] },
             { type: "star", probability: 0.05, enabled: enabledPieces[4] },
             { type: "shop", probability: 0.05, enabled: enabledPieces[5] },
             { type: "reroll", probability: 0.04, enabled: enabledPieces[6] },
             { type: "zul", probability: 0.02, enabled: enabledPieces[7] },
             { type: "bomb", probability: 0.03, enabled: enabledPieces[8] },
+            { type: "fire", probability: 0.04, enabled: enabledPieces[9] },
+            { type: "rainbow", probability: 0.05, enabled: enabledPieces[10] },
         ];
         const totalProbability = typesWithProbabilities.reduce((sum, item) => sum + item.probability, 0);
         if (totalProbability !== 1) {
@@ -403,15 +428,178 @@ document.addEventListener('DOMContentLoaded', () => {
             [spritesheets.colors, Math.floor(Math.random() * 9) + 1, true, 3], // colors 
             [spritesheets.roman, Math.floor(Math.random() * 9) + 1, true, 2], // roman
             [spritesheets.special, 6, true, 0], // bomb
+            [spritesheets.special, 7, 'hide', 0], // fire
+            [spritesheets.special, 8, true, 0], // rainbow
         ]
         return specialArray[index]
     }
 
 
+
+    document.addEventListener("click", function (event) {
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem && event.target.tagName === "CANVAS") {
+            clickedItem = event.target.closest(".grid-item, .shop-item");
+        }
+        if (!clickedItem) return;
+
+        let gridItem = gridItems.find(item => item.element === clickedItem);
+        let shopItem = shopItems.find(item => item.element === clickedItem);
+
+        if (gridItem) {
+            handleGridClick(gridItem, clickedItem);
+        } else if (shopItem) {
+            handleShopClick(shopItem, clickedItem);
+        }
+    });
+
+    // Long Press Event for Showing Tooltip
+    let pressTimer;
+    document.addEventListener("mousedown", function (event) {
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem && event.target.tagName === "CANVAS") {
+            clickedItem = event.target.closest(".grid-item, .shop-item");
+        }
+        if (!clickedItem) return;
+
+        pressTimer = setTimeout(() => {
+            showTooltip(clickedItem, event); // Show tooltip after hold
+        }, 300); // Adjust duration as needed
+    });
+
+    document.addEventListener("mouseup", function () {
+        clearTimeout(pressTimer); // Cancel if released early
+        if (toolTipItem === null) return
+        hideTooltip(); // Hide tooltip on release
+    });
+
+    document.addEventListener("mouseleave", function () {
+        clearTimeout(pressTimer); // Cancel if mouse leaves
+        if (toolTipItem === null) return
+        hideTooltip();
+    });
+
+    document.addEventListener("touchstart", function (event) {
+        let clickedItem = event.target.closest(".grid-item, .shop-item");
+        if (!clickedItem && event.target.tagName === "CANVAS") {
+            clickedItem = event.target.closest(".grid-item, .shop-item");
+        }
+        if (!clickedItem) return;
+
+        pressTimer = setTimeout(() => {
+            showTooltip(clickedItem, event);
+        }, 300);
+    });
+
+    document.addEventListener("touchend", function () {
+        console.log(toolTipItem)
+        clearTimeout(pressTimer);
+        hideTooltip();
+    });
+
+    // Tooltip Functions
+    function wrapText(text, maxLength) {
+        let words = text.split(" ");
+        let line = "";
+        let result = [];
+
+        words.forEach(word => {
+            if ((line + word).length > maxLength) {
+                result.push(line.trim());
+                line = word + " ";
+            } else {
+                line += word + " ";
+            }
+        });
+        result.push(line.trim());
+
+        return result.join("\n"); // Use "<br>" if inserting into HTML
+    }
+
+    let toolTipItem = null
+    function showTooltip(element, event) {
+        let desc = "This is a centered tooltip!"; // Default text
+        let gridItem = gridItems.find(item => item.element === element);
+        let shopItem = shopItems.find(item => item.element === element)
+
+        if (gridItem) {
+            desc = pieceData.Description(gridItem.id);
+            toolTipItem = [gridItem, gridItem.enabled]
+            gridItem.enabled = 'hide';
+        } else if (shopItem) {
+            desc = pieceData.Description(shopItem.id);
+            toolTipItem = [shopItem, shopItem.enabled]
+            shopItem.enabled = 'hide';
+        }
+
+        if (!desc || desc.trim() === "") {
+            console.warn("Tooltip description is empty. Skipping tooltip display.");
+            return;
+        }
+
+        let secondaryBackground = document.querySelector(".secondary-background");
+        if (!secondaryBackground) {
+            console.error("Secondary background not found!");
+            return;
+        }
+
+        let existingTooltip = document.querySelector(".tooltip");
+        if (existingTooltip) {
+            existingTooltip.remove();
+        }
+
+        let tooltip = document.createElement("div");
+        tooltip.classList.add("tooltip");
+
+        desc = wrapText(desc, 35); // Adjust maxLength as needed
+        tooltip.innerText = desc; // Use innerHTML if using "<br>" instead of "\n"
+
+        secondaryBackground.appendChild(tooltip);
+
+        tooltip.style.position = "absolute";
+        tooltip.style.left = "50%";
+        tooltip.style.top = "50%";
+        tooltip.style.transform = "translate(-50%, -50%)";
+        tooltip.style.whiteSpace = "pre-wrap"; // Ensures \n works properly
+
+        setTimeout(() => tooltip.classList.add("show"), 10);
+        element.tooltipElement = tooltip;
+    }
+
+    function hideTooltip() {
+        setTimeout(() => {
+            if (toolTipItem !== null) {
+                toolTipItem[0].enabled = toolTipItem[1]
+                toolTipItem = null
+            }
+        }, 10);
+        let tooltips = document.querySelectorAll(".tooltip");
+        tooltips.forEach(tooltip => tooltip.remove());
+    }
+
+
+    function disabledPiece(item) {
+        let oldState = item.enabled;
+        playAudio('/SFX/System_Piece_Disabled.ogg');
+        item.enabled = 'hide'
+        item.element.classList.add("shake");
+        setTimeout(() => {
+            item.element.classList.remove("shake");
+            item.enabled = oldState;
+        }, 150);
+    }
+
+
     function handleShopClick(shopItem, element) {
-        if (shopItem.enabled === 'empty') {
+        if (shopItem.enabled === 'empty' || shopItem.enabled === 'hide') {
             return
         }
+        for (let i = 0; i < gridItems.length; i++) {
+            gridItems[i].element.classList.remove("selected");
+            gridItems[i].isSelected = false
+        }
+        selectedPieceValue = 0;
+        selectedPieces = [];
         playAudio('/SFX/System_Selected_Piece.ogg');
         const alreadySelected = shopItem.isSelected;
         tooltip = shopItem.element.querySelector(".tooltip-text");
@@ -431,146 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
-
-    let pressTimer;
-    let isLongPress = false;
-    let preventClick = false;
-    let currentTooltip = null; // Track the current tooltip instance
-    
-    document.addEventListener("mousedown", function (event) {
-        let clickedItem = event.target.closest(".grid-item, .shop-item");
-        if (!clickedItem) return;
-    
-        // Set up the long press timer
-        pressTimer = setTimeout(() => {
-            isLongPress = true; // Set the long press flag
-            preventClick = true; // Prevent the click event after long press
-            
-            // Only show tooltip if no existing tooltip is present
-            if (!currentTooltip) {
-                showTooltip(clickedItem, event);
-            }
-        }, 100); // Long press threshold (100ms)
-    });
-    
-    document.addEventListener("mouseup", function () {
-        clearTimeout(pressTimer);
-        if (isLongPress) {
-            // If it was a long press, don't trigger the click event
-            isLongPress = false;
-            return;
-        }
-    
-        // If it's a normal release, reset the preventClick flag
-        preventClick = false;
-        hideTooltip(); // Hide tooltip if no long press
-    });
-    
-    document.addEventListener("mouseleave", function () {
-        clearTimeout(pressTimer);
-        if (isLongPress) {
-            isLongPress = false;
-            return;
-        }
-    
-        preventClick = false; // Reset preventClick if mouse leaves
-        hideTooltip();
-    });
-    
-    document.addEventListener("touchstart", function (event) {
-        let clickedItem = event.target.closest(".grid-item, .shop-item");
-        if (!clickedItem) return;
-    
-        pressTimer = setTimeout(() => {
-            isLongPress = true;
-            preventClick = true;
-    
-            // Only show tooltip if no existing tooltip is present
-            if (!currentTooltip) {
-                showTooltip(clickedItem, event);
-            }
-        }, 100); // Long press threshold (100ms)
-    });
-    
-    document.addEventListener("touchend", function () {
-        clearTimeout(pressTimer);
-        if (isLongPress) {
-            isLongPress = false;
-            return;
-        }
-    
-        preventClick = false;
-        hideTooltip();
-    });
-    
-    // Function to show the tooltip
-    function showTooltip(item, event) {
-        // If a tooltip already exists, hide the previous one first
-        if (currentTooltip) {
-            hideTooltip();
-        }
-    
-        // Create and display a new tooltip
-        currentTooltip = document.createElement("div");
-        currentTooltip.classList.add("tooltip");
-        currentTooltip.innerHTML = "This is a tooltip"; // Customize as needed
-    
-        // Position the tooltip
-        const rect = item.getBoundingClientRect();
-        currentTooltip.style.position = "absolute";
-        currentTooltip.style.left = `${rect.left + rect.width / 2}px`;
-        currentTooltip.style.top = `${rect.top - 10}px`; // Position above the item
-    
-        document.body.appendChild(currentTooltip);
-    }
-    
-    // Function to hide the tooltip
-    function hideTooltip() {
-        if (currentTooltip) {
-            currentTooltip.remove(); // Remove the tooltip from the DOM
-            currentTooltip = null; // Reset the currentTooltip variable
-        }
-    }
-    
-
-    
-    
-    // Normal click event
-    document.addEventListener("click", function (event) {
-        // If long press happened, prevent the click from firing
-        if (preventClick) {
-            preventClick = false; // Reset the flag after preventing the click
-            return; // Skip click event
-        }
-    
-        let clickedItem = event.target.closest(".grid-item, .shop-item");
-        if (!clickedItem) return;
-    
-        let gridItem = gridItems.find(item => item.element === clickedItem);
-        let shopItem = shopItems.find(item => item.element === clickedItem);
-    
-        if (gridItem) {
-            handleGridClick(gridItem, clickedItem);
-        } else if (shopItem) {
-            handleShopClick(shopItem, clickedItem);
-        }
-    });
-    
-    
-    
-
-    function disabledPiece(item) {
-        let oldState = item.enabled;
-        playAudio('/SFX/System_Piece_Disabled.ogg');
-        item.enabled = 'hide'
-        item.element.classList.add("shake");
-        setTimeout(() => {
-            item.element.classList.remove("shake");
-            item.enabled = oldState;
-        }, 150);
-    }
-
     function handleGridClick(gridItem, element) {
         if (gridItem.enabled === false) {
             disabledPiece(gridItem)
@@ -579,7 +627,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return
         } else if (gridItem.type === 'reroll') {
             updateRoll(gridItem)
-            return   
+            return
+        } else if (gridItem.type === 'rainbow') {
+            updateRainbow(gridItem)
+            return
         } else if (gridItem.type === 'star' && selectedPieces.length == 0) {
             disabledPiece(gridItem)
             return
@@ -608,32 +659,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gridItem.isSelected) {
             let numbersList = selectedPieces.some(n => n.type === "numbers");
             let colorsList = selectedPieces.some(n => n.type === "colors");
+            let romanList = selectedPieces.some(n => n.type === "roman");
             if (gridItem.type === 'star') {
                 selectedPieceValue = 10;
+            } else if ((gridItem.type === 'roman' && colorsList) || (gridItem.type === 'colors' && romanList)) {
+                selectedPieceValue = 11;
             } else if ((gridItem.type === 'numbers' && colorsList) || (gridItem.type === 'colors' && numbersList)) {
                 selectedPieceValue = 11;
+            } else if (gridItem.type === 'zul') {
+
             } else if (gridItem.type === 'colors') {
-               if (selectedPieces.length > 0) {
-                 if (selectedPieces[0].value === gridItem.value) {
-                    selectedPieceValue = 10
-                 } else {
-                    selectedPieceValue = 11
-                 }
-               } else {
-                selectedPieceValue += 0
-               }     
+                if (selectedPieces.length > 0) {
+                    if (selectedPieces[0].value === gridItem.value) {
+                        selectedPieceValue = 10
+                    } else {
+                        selectedPieceValue = 11
+                    }
+                }
             } else {
                 selectedPieceValue += gridItem.value;
             }
             selectedPieces.push(gridItem);
         } else {
             selectedPieces = selectedPieces.filter(item => item !== gridItem);
-            selectedPieceValue -= gridItem.value;
+            if (gridItem.type === 'roman' || gridItem.type === 'numbers') {
+                selectedPieceValue -= gridItem.value;
+            }
         }
         HandlePieceAction(gridItem);
     }
 
     function HandlePieceAction(piece) {
+        console.log(selectedPieceValue)
         if (selectedPieceValue === 10) {
             hideSelectedPieces('success');
             playAudio('/SFX/System_Money.ogg');
@@ -664,9 +721,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mode === 'success') {
                 totalPoints += item.points;
                 bubbles += destroyNearbyBubble(gridItems.indexOf(item));
+            } else {
+                setTimeout(() => {
+                    generatePiece(gridItems.indexOf(item), gridContainer, "grid-item", "blocked");
+                    gridItems[gridItems.indexOf(item)].canvas.style.transition = "opacity 0.5s";
+                    gridItems[gridItems.indexOf(item)].canvas.style.opacity = "1";
+                }, 500);
             }
         });
-        if (bubbles > 0) { playAudio('/SFX/System_Bubble_Pop.ogg') }
+        if (bubbles > 0) {
+            totalPoints += bubbles;
+            playAudio('/SFX/System_Bubble_Pop.ogg');
+        }
         if (mode === 'success') {
             updateMoneyDisplay(totalPoints * selectedPieces.length);
             for (let i = 0; i < gridItems.length; i++) {
@@ -695,11 +761,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function updateRainbow(item) {
+        item.enabled = 'empty';
+        item.canvas.style.transition = "opacity 0.5s";
+        item.canvas.style.opacity = "0";
+        playFlashAnimation(item.element, 'rgba(250, 225, 0, 0.8)', 'rgba(0, 255, 242, 0.5)')
+        playAudio('/SFX/System_Colors.ogg');
+        let updatedPieces = 0;
+        const indexes = [...gridItems.keys()];
+        for (let i = indexes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+        }
+        for (let i = 0; i < indexes.length; i++) {
+            let index = indexes[i];
+            if (gridItems[index].enabled === 'empty') continue
+            if (gridItems[index].type !== 'numbers') continue
+            gridItems[index].element.classList.add("shake");
+            gridItems[index].enabled = 'empty';
+            gridItems[index].canvas.style.transition = "opacity 0.5s";
+            gridItems[index].canvas.style.opacity = "0";
+            let rainbowSelected = selectedPieces.indexOf(gridItems[index])
+            if (rainbowSelected != -1) {
+                selectedPieces[rainbowSelected].element.classList.remove("selected");
+                selectedPieceValue -= gridItems[index].value;
+                selectedPieces = selectedPieces.filter(item => item !== gridItems[index]);
+            }
+            setTimeout(() => {
+                generatePiece(index, shopContainer, "grid-item", "colors");
+                gridItems[index].element.classList.remove("shake");
+                gridItems[index].canvas.style.transition = "opacity 0.5s";
+                gridItems[index].canvas.style.opacity = "1";
+            }, 500);
+            let breakChance = Math.random() < 0.25;
+            if (updatedPieces >= 6) break;
+            if (updatedPieces > 0 && breakChance) break;
+            updatedPieces += 1;
+        }
+
+
+
+    }
+
     function bombExplode(item) {
         playAudio('/SFX/System_Explosion.ogg');
         item.enabled = 'empty';
         item.canvas.style.transition = "opacity 0.5s";
         item.canvas.style.opacity = "0";
+        playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)')
         let centerIndex = gridItems.indexOf(item)
         let centerX = centerIndex % gridSize;
         let centerY = Math.floor(centerIndex / gridSize);
@@ -711,6 +820,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
                     let piece = gridItems[newIndex];
                     if (piece.enabled !== 'empty') {
+                        let destroySelected = selectedPieces.indexOf(piece)
+                        if (destroySelected != -1) {
+                            selectedPieces[destroySelected].element.classList.remove("selected");
+                            selectedPieceValue -= piece.value;
+                            selectedPieces = selectedPieces.filter(item => item !== piece);
+                        }
                         piece.enabled = 'empty';
                         piece.canvas.style.transition = "opacity 0.5s";
                         piece.canvas.style.opacity = "0";
@@ -736,6 +851,13 @@ document.addEventListener('DOMContentLoaded', () => {
         item.canvas.style.opacity = "0";
         playFlashAnimation(item.element, 'rgba(121, 250, 0, 0.8)', 'rgba(115, 255, 0, 0.5)')
         playAudio('/SFX/System_Update_Shop.ogg');
+        shopItems.forEach(item => {
+            if (item.isSelected) {
+                item.element.classList.remove("selected");
+                item.isSelected = false;
+                item.element.querySelector(".tooltip-text").classList.remove("show");
+            }
+        });
         for (let i = 0; i < shopItems.length; i++) {
             shopItems[i].element.classList.add("shake");
             shopItems[i].enabled = 'empty';
@@ -754,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let item = gridItems[index];
         if (item.type === 'roman' && item.enabled !== 'hide' && item.enabled !== 'empty') {
             item.enabled = 'hide';
-            item.canvas.style.transition = "opacity 0.5s";
+            item.canvas.style.transition = "opacity 0.3s";
             item.canvas.style.opacity = "0";
             setTimeout(() => {
                 const ctx = item.canvas.getContext("2d");
@@ -769,9 +891,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const offsetY = (item.canvas.height - 36) / 2;
                 ctx.drawImage(spritesheets.roman, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
                 item.enabled = true;
-                item.canvas.style.transition = "opacity 0.5s";
+                item.canvas.style.transition = "opacity 0.3s";
                 item.canvas.style.opacity = "1";
-            }, 500);
+            }, 300);
         }
     }
 
@@ -791,7 +913,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         bubble.canvas.style.transition = "opacity 0.5s";
                         bubble.canvas.style.opacity = "0";
                         playFlashAnimation(bubble.element, 'rgba(0, 250, 250, 0.8)', 'rgba(0, 204, 255, 0.5)')
-                        bubblesDestroyed++;
+                        bubblesDestroyed += bubble.points;
                     }
                 }
             }

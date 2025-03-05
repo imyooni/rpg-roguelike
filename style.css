@@ -13,7 +13,14 @@ body {
 
 @font-face {
     font-family: 'DefaultFont';
-    src: url('./assets/Fonts/DefaultFont.ttf') format('woff2');
+    src: url('./assets/Fonts/DefaultFont.ttf') format('woff2'), ;
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'DefaultText';
+    src: url('./assets/Fonts/DefaultText.ttf') format('woff2'), ;
     font-weight: normal;
     font-style: normal;
 }
@@ -354,26 +361,39 @@ body {
     animation: piece-flash 0.2s ease-in-out;
 }
 
+
 .tooltip {
     position: absolute;
-    background: rgba(0, 0, 0, 0.8);
+    background-color: #2b2d42; 
+    background-repeat: no-repeat;
+    background-position: 5px center;
     color: white;
     padding: 6px 10px;
     border-radius: 5px;
     font-size: 14px;
     white-space: nowrap;
     z-index: 1000;
-    pointer-events: none; /* Prevents interfering with clicks */
+    font-family: 'DefaultText';
+    font-size: 14px;
+    border: 1px solid black;
+    pointer-events: none; /* Disable pointer interactions */
+    user-select: none; /* Disable text selection */
     transform: translateX(-50%);
     top: -40px; /* Adjust based on positioning */
     left: 50%;
     transition: opacity 0.2s ease-in-out;
     opacity: 0;
+    text-shadow: 
+    1px 1px 0px black,  
+    -1px -1px 0px black,  
+    1px -1px 0px black, 
+    -1px 1px 0px black;
 }
 
 .tooltip.show {
     opacity: 1;
 }
+
 
 
 

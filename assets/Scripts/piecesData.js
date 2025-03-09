@@ -19,7 +19,7 @@ export function Price(id) {
 export function Description(id) {
     let desc = [
         "Combine different pieces to reach a total of 10 points.", // normal
-        "A blocked slot—nothing can be placed here.", // blocked
+        "A blocked piece that does nothing.", // blocked
         "This piece can pair with any number to make 10 points.", // star
         "Explodes when a nearby piece is destroyed.", // bubble
         "Refreshes the available pieces in the shop.", // shop

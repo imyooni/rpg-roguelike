@@ -120,25 +120,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateGridPieces() {
         gridContainer.innerHTML = ""
         for (let i = 0; i < gridSize * gridSize; i++) {
-            generatePiece(i, gridContainer, "grid-item")
+            generatePiece(i, gridContainer, "grid-item", null, true)
         }
     }
 
 
-    const audioCache = {};
+    let audioContext;
+
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+    
     function playAudio(filePath) {
-        if (!audioCache[`./assets/Audio/${filePath}`]) {
-            audioCache[`./assets/Audio/${filePath}`] = new Audio(`./assets/Audio/${filePath}`);
-        }
-        const audio = audioCache[`./assets/Audio/${filePath}`];
-        audio.currentTime = 0;
-        audio.play();
+        initAudio(); // Ensure AudioContext is initialized
+        const audioSrc = `./assets/Audio/${filePath}`;
+        const audio = new Audio(audioSrc);
+        audio.play().catch((e) => console.warn("Audio playback failed:", e));
     }
+    
+    // Ensure audio playback works on mobile
+    document.addEventListener("click", initAudio, { once: true });
+    document.addEventListener("touchstart", initAudio, { once: true });
+    
+    
 
     function generateShopPieces() {
         shopContainer.innerHTML = "";
         for (let i = 0; i < 6; i++) {
-            generatePiece(i, shopContainer, "shop-item")
+            generatePiece(i, shopContainer, "shop-item", null, true)
         }
     }
 
@@ -152,194 +163,157 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createReroll() {
-        reRollButton = document.createElement("div");
+        if (!reRollcanvas) {
+            reRollcanvas = document.createElement("canvas");
+        }
+        reRollButton = document.createElement("div"); // Assign globally
         reRollButton.classList.add("shuffle-item");
-        reRollButton.style.width = `34px`;
-        reRollButton.style.height = `64px`;
-        reRollButton.style.position = "absolute";
+    
+        Object.assign(reRollButton.style, {
+            width: "34px",
+            height: "64px",
+            position: "absolute",
+        });
+    
         reRollcanvas.width = 34;
         reRollcanvas.height = 64;
         const ctx = reRollcanvas.getContext("2d");
         ctx.imageSmoothingEnabled = false;
         updateReRollImage(ctx, reRollcanvas);
-        reRollButton.addEventListener('click', function () {
-            if (reRollButton.classList.contains("shake")) {
-                return;
-            }
-            let emptySpaces = [];
-            for (let index = 0; index < gridItems.length; index++) {
-                const piece = gridItems[index];
-                if (piece.enabled === 'empty') {
-                    emptySpaces.push(index);
-                }
-            }
-            if (reRolls <= 0 || emptySpaces.length <= 0) {
-                playAudio('/SFX/System_Piece_Disabled.ogg');
+    
+        reRollButton.addEventListener("click", function () {
+            if (reRollButton.classList.contains("shake")) return;
+    
+            let emptySpaces = gridItems
+                .map((piece, index) => (piece.enabled === "empty" ? index : null))
+                .filter((index) => index !== null);
+    
+            if (reRolls <= 0 || emptySpaces.length === 0) {
+                playAudio("/SFX/System_Piece_Disabled.ogg");
                 reRollButton.classList.add("shake");
-                setTimeout(() => {
+                reRollButton.addEventListener("animationend", () => {
                     reRollButton.classList.remove("shake");
-                }, 150);
+                });
                 return;
             }
+    
             reRolls -= 1;
-            playAudio('/SFX/System_ReRoll.ogg');
+            playAudio("/SFX/System_ReRoll.ogg");
             reRollButton.classList.add("shake");
-            if (emptySpaces.length > 0) {
-                for (let index = 0; index < emptySpaces.length; index++) {
-                    const piece = gridItems[emptySpaces[index]];
-                    piece.canvas.style.transition = "opacity 0.5s";
-                    piece.canvas.style.opacity = "1";
-                    generatePiece(emptySpaces[index], gridContainer, "grid-item");
-                    piece.element.classList.add("shake");
-                }
-            }
-
-            setTimeout(() => {
+    
+            emptySpaces.forEach((index) => {
+                let piece = gridItems[index];
+                piece.canvas.style.transition = "opacity 0.5s";
+                piece.canvas.style.opacity = "1";
+                generatePiece(index, gridContainer, "grid-item", null, true);
+                piece.element.classList.add("shake");
+            });
+    
+            reRollButton.addEventListener("animationend", () => {
                 reRollButton.classList.remove("shake");
-                for (let index = 0; index < emptySpaces.length; index++) {
-                    const piece = gridItems[emptySpaces[index]];
-                    piece.element.classList.remove("shake");
-                }
-            }, 150);
+                emptySpaces.forEach((index) => gridItems[index].element.classList.remove("shake"));
+            });
+    
             updateReRollImage(ctx, reRollcanvas);
         });
+    
         reRollButton.appendChild(reRollcanvas);
-        document.querySelector(".shuffle-item").appendChild(reRollButton);
-    }
-
-
-
-    function generatePiece(index, container, classId, fixedType = null) {
-        let specialValue;
-        if (classId === 'shop-item') {
-            specialValue = 0.60;
+    
+        let shuffleContainer = document.querySelector(".shuffle-item");
+        if (shuffleContainer) {
+            shuffleContainer.appendChild(reRollButton);
         } else {
-            specialValue = 0.25;
+            console.warn("Warning: .shuffle-item container not found.");
         }
+    }
+    
+    function generatePiece(index, container, classId, fixedType = null, reroll = false) {
+        let specialValue = (classId === 'shop-item') ? 0.60 : 0.25;
+    
         function getRandomChoice() {
             return Math.random() < specialValue ? 'special' : 'normal';
         }
-        let pieceChoice = getRandomChoice();
-        if (fixedType !== "normal" && fixedType !== null) {
-            pieceChoice = "special"
-        }
-        let spriteKey, id, points = 1, pieceType, enabled = true, randomNumber, spriteX, spriteY, offsetX, value, price, offsetY;
+    
+        let pieceChoice = (fixedType !== "normal" && fixedType !== null) ? "special" : getRandomChoice();
+        let id = 0, price, pieceType = 'numbers', enabled = true, points = 1;
+        let spriteKey, randomNumber, value;
+    
         if (pieceChoice === "normal" || fixedType === "normal") {
-            id = 0;
-            price = pieceData.Price(0)
-            pieceType = 'numbers';
+            price = pieceData.Price(0);
             spriteKey = spritesheets.numbers;
-            randomNumber = getRandomNumber()
-            if (randomNumber === 10) {
-                value = Math.floor(Math.random() * 9) + 1;
-            } else {
-                value = randomNumber;
-            }
+            randomNumber = getRandomNumber();
+            value = (randomNumber === 10) ? Math.floor(Math.random() * 9) + 1 : randomNumber;
         } else {
-            let specialPiece;
-            if (fixedType === null) {
-                specialPiece = getRandomTypeByProbabilityWithDisableEffect(classId);
+            let specialPiece = fixedType || getRandomTypeByProbabilityWithDisableEffect(classId, reroll);
+            if (specialPiece) {
+                let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
+                [spriteKey, randomNumber, enabled, points] = specialIndex;
+                pieceType = specialPiece;
+                id = specialTypesList.indexOf(specialPiece) + 1;
+                price = pieceData.Price(id);
+                value = randomNumber;
             } else {
-                specialPiece = fixedType;
-            }
-            if (specialPiece === null) {
-                id = 0;
-                price = pieceData.Price(0)
-                pieceType = 'numbers';
+                // Default to normal piece if no special piece is selected
+                price = pieceData.Price(0);
                 spriteKey = spritesheets.numbers;
                 randomNumber = Math.floor(Math.random() * 10) + 1;
-                if (randomNumber === 10) {
-                    value = Math.floor(Math.random() * 9) + 1;
-                } else {
-                    value = randomNumber;
-                }
-            } else {
-                let specialIndex = getSpecialData(specialTypesList.indexOf(specialPiece));
-                spriteKey = specialIndex[0];
-                randomNumber = specialIndex[1];
-                enabled = specialIndex[2];
-                points = specialIndex[3];
-                pieceType = specialPiece;
-                price = pieceData.Price(specialTypesList.indexOf(specialPiece) + 1)
-                id = specialTypesList.indexOf(specialPiece) + 1;
-                value = randomNumber;
+                value = (randomNumber === 10) ? Math.floor(Math.random() * 9) + 1 : randomNumber;
             }
         }
-        spriteX = (randomNumber - 1) * 36;
-        spriteY = 0;
-        offsetX = (cellSize - 36) / 2;
-        offsetY = (cellSize - 36) / 2;
-        let piecesListIndex
-        if (classId === "grid-item") {
-            piecesListIndex = gridItems[index]
-        } else {
-            piecesListIndex = shopItems[index]
-        }
-        if (piecesListIndex) {
-            let existingItem;
-            if (classId === "grid-item") {
-                existingItem = gridItems[index]
-            } else {
-                existingItem = shopItems[index]
-            }
+    
+        let spriteX = (randomNumber - 1) * 36;
+        let spriteY = 0;
+        let offsetX = (cellSize - 36) / 2;
+        let offsetY = offsetX;
+    
+        let piecesList = (classId === "grid-item") ? gridItems : shopItems;
+        let existingItem = piecesList[index];
+    
+        if (existingItem) {
+            // Reuse existing canvas, update only necessary properties
             let ctx = existingItem.canvas.getContext("2d");
             ctx.clearRect(0, 0, cellSize, cellSize);
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-            existingItem.enabled = enabled;
-            existingItem.points = points;
-            existingItem.value = value;
-            existingItem.price = price;
-            existingItem.id = id;
-            existingItem.type = pieceType;
-            existingItem.isSelected = false;
+    
+            Object.assign(existingItem, { enabled, points, value, price, id, type: pieceType, isSelected: false });
+    
             if (classId === "shop-item") {
+                existingItem.enabled = true;
                 let tooltip = existingItem.element.querySelector(".tooltip-text");
-                if (tooltip) {
-                    tooltip.innerText = `$${existingItem.price}`;
-                }
+                if (tooltip) tooltip.innerText = `$${existingItem.price}`;
             }
         } else {
+            // Create new element only if one doesn't exist
             const cell = document.createElement("div");
             cell.classList.add(classId);
-            cell.style.width = `${cellSize}px`;
-            cell.style.height = `${cellSize}px`;
-            cell.style.position = "relative";
+            Object.assign(cell.style, { width: `${cellSize}px`, height: `${cellSize}px`, position: "relative" });
+    
             const canvas = document.createElement("canvas");
-            canvas.style.transition = "opacity 0.5s";
-            canvas.style.opacity = "0";
-            canvas.width = cellSize;
-            canvas.height = cellSize;
+            Object.assign(canvas.style, { transition: "opacity 0.5s", opacity: "0" });
+            Object.assign(canvas, { width: cellSize, height: cellSize });
+    
             const ctx = canvas.getContext("2d");
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+            
             cell.appendChild(canvas);
             container.appendChild(cell);
-            const pieceData = {
-                element: cell,
-                canvas: canvas,
-                id: id,
-                enabled: enabled,
-                points: points,
-                price: price,
-                value: value,
-                type: pieceType,
-                isSelected: false,
-            };
-            requestAnimationFrame(() => {
-                canvas.style.transition = "opacity 0.5s";
-                canvas.style.opacity = "1";
-            });
-            if (classId === "grid-item") {
-                gridItems[index] = pieceData
-            } else if (classId === "shop-item") {
-                shopItems[index] = pieceData
+    
+            let pieceDataObj = { element: cell, canvas, id, enabled, points, price, value, type: pieceType, isSelected: false };
+            requestAnimationFrame(() => (canvas.style.opacity = "1"));
+    
+            piecesList[index] = pieceDataObj;
+    
+            if (classId === "shop-item") {
+                pieceDataObj.enabled = true;
                 let tooltip = document.createElement("span");
                 tooltip.classList.add("tooltip-text");
-                tooltip.innerText = `$${pieceData.price}`;
-                pieceData.element.appendChild(tooltip);
+                tooltip.innerText = `$${pieceDataObj.price}`;
+                cell.appendChild(tooltip);
             }
         }
     }
+    
 
     function getRandomNumber() {
         const numbersProbabilities = [
@@ -371,13 +345,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return 10;
     }
 
-    function getRandomTypeByProbabilityWithDisableEffect(classId) {
+    function getRandomTypeByProbabilityWithDisableEffect(classId,reroll = false) {
         let enabledPieces = new Array(specialTypesList.length).fill(true);
         if (classId === 'shop-item') {
             enabledPieces[2] = false;
+            enabledPieces[5] = false;
+        }
+        if (reroll) {
+            enabledPieces[6] = false;
         }
         for (let i = 0; i < gridItems.length; i++) {
-            if (gridItems[i] === null) continue
+            if (gridItems[i] === null || gridItems[i].enabled === 'empty') continue
             if (gridItems[i].type === 'fire') {
                 enabledPieces[9] = false
             }
@@ -438,11 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener("click", function (event) {
         let clickedItem = event.target.closest(".grid-item, .shop-item");
+
         if (!clickedItem && event.target.tagName === "CANVAS") {
             clickedItem = event.target.closest(".grid-item, .shop-item");
         }
         if (!clickedItem) return;
-
+         
         let gridItem = gridItems.find(item => item.element === clickedItem);
         let shopItem = shopItems.find(item => item.element === clickedItem);
 
@@ -453,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Long Press Event for Showing Tooltip
     let pressTimer;
     document.addEventListener("mousedown", function (event) {
         let clickedItem = event.target.closest(".grid-item, .shop-item");
@@ -492,8 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener("touchend", function () {
-        console.log(toolTipItem)
         clearTimeout(pressTimer);
+        if (toolTipItem === null) return
         hideTooltip();
     });
 
@@ -502,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let words = text.split(" ");
         let line = "";
         let result = [];
-
         words.forEach(word => {
             if ((line + word).length > maxLength) {
                 result.push(line.trim());
@@ -512,16 +489,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         result.push(line.trim());
-
         return result.join("\n"); // Use "<br>" if inserting into HTML
     }
 
     let toolTipItem = null
     function showTooltip(element, event) {
-        let desc = "This is a centered tooltip!"; // Default text
+        let desc = ""; 
         let gridItem = gridItems.find(item => item.element === element);
         let shopItem = shopItems.find(item => item.element === element)
-
         if (gridItem) {
             desc = pieceData.Description(gridItem.id);
             toolTipItem = [gridItem, gridItem.enabled]
@@ -531,37 +506,24 @@ document.addEventListener('DOMContentLoaded', () => {
             toolTipItem = [shopItem, shopItem.enabled]
             shopItem.enabled = 'hide';
         }
-
         if (!desc || desc.trim() === "") {
-            console.warn("Tooltip description is empty. Skipping tooltip display.");
             return;
         }
-
         let secondaryBackground = document.querySelector(".secondary-background");
-        if (!secondaryBackground) {
-            console.error("Secondary background not found!");
-            return;
-        }
-
         let existingTooltip = document.querySelector(".tooltip");
         if (existingTooltip) {
             existingTooltip.remove();
         }
-
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-
-        desc = wrapText(desc, 35); // Adjust maxLength as needed
+        desc = wrapText(desc, 40); // Adjust maxLength as needed
         tooltip.innerText = desc; // Use innerHTML if using "<br>" instead of "\n"
-
         secondaryBackground.appendChild(tooltip);
-
         tooltip.style.position = "absolute";
         tooltip.style.left = "50%";
         tooltip.style.top = "18%";
         tooltip.style.transform = "translate(-50%, -50%)";
         tooltip.style.whiteSpace = "pre-wrap"; // Ensures \n works properly
-
         setTimeout(() => tooltip.classList.add("show"), 10);
         element.tooltipElement = tooltip;
     }
@@ -575,18 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
         let tooltips = document.querySelectorAll(".tooltip");
         tooltips.forEach(tooltip => tooltip.remove());
-    }
-
-
-    function disabledPiece(item) {
-        let oldState = item.enabled;
-        playAudio('/SFX/System_Piece_Disabled.ogg');
-        item.enabled = 'hide'
-        item.element.classList.add("shake");
-        setTimeout(() => {
-            item.element.classList.remove("shake");
-            item.enabled = oldState;
-        }, 150);
     }
 
 
@@ -610,14 +560,103 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.element.querySelector(".tooltip-text").classList.remove("show");
             }
         });
+        const buyButton = document.querySelector('.buy-button');
         if (!alreadySelected) {
             shopItem.element.classList.add("selected");
             shopItem.isSelected = true;
             tooltip.classList.add("show");
+            buyButton.pieceIndex = shopItems.indexOf(shopItem);
+            buyButton.style.transition = "opacity 0.3s";
+            buyButton.style.opacity = "1";
         } else {
             tooltip.classList.remove("show");
+            buyButton.style.transition = "opacity 0.3s";
+            buyButton.style.opacity = "0";
         }
     }
+
+    document.addEventListener("click", function (event) {
+        const buyButton = document.querySelector('.buy-button');
+        if (buyButton.classList.contains("shake")) return;
+        if (event.target === buyButton) {
+            if (buyButton.style.opacity != 1) return;
+    
+            let emptySpaces = gridItems
+                .map((piece, index) => (piece.enabled === "empty" ? index : null))
+                .filter((index) => index !== null);
+    
+            // Check if the piece can be bought
+            if (
+                shopItems[buyButton.pieceIndex].enabled === 'empty' || 
+                money < shopItems[buyButton.pieceIndex].price || 
+                emptySpaces.length === 0
+            ) {
+                playAudio('/SFX/System_Piece_Disabled.ogg');   
+                buyButton.classList.add("shake");
+                buyButton.addEventListener("animationend", () => {
+                    buyButton.classList.remove("shake");
+                });
+                return;
+            } else {
+                const randomIndex = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
+                const shopPiece = shopItems[buyButton.pieceIndex];
+                gridItems[randomIndex].element.classList.add("shake");
+                shopPiece.element.classList.add("shake");
+                shopPiece.canvas.style.transition = "opacity 0.5s";
+                shopPiece.canvas.style.opacity = "0";
+                shopPiece.element.addEventListener("animationend", () => {
+                    shopPiece.enabled = 'empty'
+                })
+                shopItems.forEach(item => {
+                    if (item.isSelected) {
+                        item.element.classList.remove("selected");
+                        item.isSelected = false;
+                        item.element.querySelector(".tooltip-text").classList.remove("show");
+                    }
+                });
+                tooltip.classList.remove("show");
+                buyButton.style.transition = "opacity 0.3s";
+                buyButton.style.opacity = "0";
+                    let enabled;
+                    let spriteX = (shopPiece.value - 1) * 36;
+                    let spriteY = 0;
+                    let offsetX = (cellSize - 36) / 2;
+                    let offsetY = offsetX;
+                    let existingItem = gridItems[randomIndex];
+                    let spriteKey;
+                    let pieceData = getSpecialData(shopPiece.id - 1);
+                    if (shopPiece.id == 0) {
+                        enabled = true;
+                        spriteKey = spritesheets.numbers;
+                    } else {
+                        spriteKey = pieceData[0];
+                        enabled = pieceData[2];
+                    }
+                    let ctx = existingItem.canvas.getContext("2d");
+                    ctx.clearRect(0, 0, cellSize, cellSize);
+                    ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+                    Object.assign(existingItem, {
+                        enabled: enabled, 
+                        id: shopPiece.id,
+                        isSelected: false,
+                        points: shopPiece.points,
+                        price: 0,
+                        type: shopPiece.type,
+                        value: shopPiece.value
+                    });
+    
+                    gridItems[randomIndex].element.classList.remove("shake");
+                    gridItems[randomIndex].canvas.style.transition = "opacity 0.5s";
+                    gridItems[randomIndex].canvas.style.opacity = "1";
+    
+                // Play the sound and update the money display
+                playAudio('/SFX/System_Update_Shop.ogg');
+                updateMoneyDisplay(-shopItems[buyButton.pieceIndex].price);
+            }
+        }
+    });
+    
+
 
     function handleGridClick(gridItem, element) {
         if (gridItem.enabled === false) {
@@ -646,6 +685,10 @@ document.addEventListener('DOMContentLoaded', () => {
         playAudio('/SFX/System_Selected_Piece.ogg');
         gridItem.isSelected = !gridItem.isSelected;
         element.classList.toggle('selected');
+        const buyButton = document.querySelector('.buy-button');
+       buyButton.style.transition = "opacity 0.3s";
+       buyButton.style.opacity = "0";
+
         if (tooltip) {
             tooltip.classList.remove("show")
             shopItems.forEach(item => {
@@ -690,7 +733,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function HandlePieceAction(piece) {
-        console.log(selectedPieceValue)
         if (selectedPieceValue === 10) {
             hideSelectedPieces('success');
             playAudio('/SFX/System_Money.ogg');
@@ -709,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let colorFlash
         selectedPieces.forEach(item => {
             if (mode === 'success') {
-                colorFlash = ['rgba(250, 225, 0, 0.8)', 'rgba(255, 230, 0, 0.5)']
+                colorFlash = ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.3)']
             } else {
                 colorFlash = ['rgba(250, 0, 0, 0.8)', 'rgba(255, 0, 0, 0.5)']
             }
@@ -955,6 +997,17 @@ document.addEventListener('DOMContentLoaded', () => {
             digitElement.style.backgroundPosition = `-${digit * digitWidth}px 0`;
             moneyDisplay.appendChild(digitElement);
         }
+    }
+
+    function disabledPiece(item) {
+        let oldState = item.enabled;
+        playAudio('/SFX/System_Piece_Disabled.ogg');
+        item.enabled = 'hide'
+        item.element.classList.add("shake");
+        setTimeout(() => {
+            item.element.classList.remove("shake");
+            item.enabled = oldState;
+        }, 150);
     }
 
 });

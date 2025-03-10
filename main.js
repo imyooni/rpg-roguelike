@@ -175,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         source.start(0);
     }
     
+
+    
     
     // Unlock audio on first user interaction (needed for mobile)
     document.addEventListener("click", initAudio, { once: true });
@@ -768,9 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedPieceValue === 10) {
             hideSelectedPieces('success');
             playAudio('/SFX/System_Money.ogg');
-            setTimeout(() => {
-                playAudio('/SFX/System_Selected_ok.ogg');
-            }, 10);
+            setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
         } else if (selectedPieceValue > 10) {
             hideSelectedPieces('wrong');
             playAudio('/SFX/System_Selected_Error.ogg');

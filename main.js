@@ -16,7 +16,7 @@ let money = 0; //Math.floor(Math.random() * 9999999);
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
     "reroll", "colors", "roman", "bomb", "fire",
-    "rainbow"];
+    "rainbow","updown"];
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         roman: new Image(),
         special: new Image(),
         zul: new Image(),
+        updown: new Image(),
     };
 
     function loadSpritesheets() {
@@ -106,6 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 spritesheets.roll.src = "./assets/Sprites/reRollButton.png";
                 spritesheets.roll.onload = resolve;
             }),
+            new Promise((resolve) => {
+                spritesheets.updown.src = "./assets/Sprites/updown.png";
+                spritesheets.updown.onload = resolve;
+            }),
         ];
         Promise.all(loadPromises).then(() => {
             generateShopPieces();
@@ -127,23 +132,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let audioContext;
 
-    function initAudio() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
-    
-    function playAudio(filePath) {
-        initAudio(); // Ensure AudioContext is initialized
-        const audioSrc = `./assets/Audio/${filePath}`;
-        const audio = new Audio(audioSrc);
-        audio.play().catch((e) => console.warn("Audio playback failed:", e));
+    if (audioContext.state === "suspended") {
+        audioContext.resume().catch((e) => console.warn("AudioContext resume failed:", e));
     }
-    
-    // Ensure audio playback works on mobile
-    document.addEventListener("click", initAudio, { once: true });
-    document.addEventListener("touchstart", initAudio, { once: true });
-    
+}
+
+function playAudio(filePath) {
+    initAudio(); // Ensure AudioContext is initialized
+    const audio = new Audio(`./assets/Audio/${filePath}`);
+    audio.play().catch((e) => console.warn("Audio playback failed:", e));
+}
+
+// Ensure audio is allowed on mobile by initializing on first interaction
+document.addEventListener("click", () => {
+    initAudio();
+}, { once: true });
+
+document.addEventListener("touchstart", () => {
+    initAudio();
+}, { once: true });
+
     
 
     function generateShopPieces() {
@@ -347,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getRandomTypeByProbabilityWithDisableEffect(classId,reroll = false) {
         let enabledPieces = new Array(specialTypesList.length).fill(true);
+        let firePieces = 0
         if (classId === 'shop-item') {
             enabledPieces[2] = false;
             enabledPieces[5] = false;
@@ -356,15 +369,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         for (let i = 0; i < gridItems.length; i++) {
             if (gridItems[i] === null || gridItems[i].enabled === 'empty') continue
-            if (gridItems[i].type === 'fire') {
-                enabledPieces[9] = false
+            if (gridItems[i].type === 'shop') {
+                enabledPieces[5] = false
             }
             if (gridItems[i].type === 'reroll') {
                 enabledPieces[6] = false
             }
         }
         const typesWithProbabilities = [
-            { type: "colors", probability: 0.36, enabled: enabledPieces[0] },
+            { type: "colors", probability: 0.33, enabled: enabledPieces[0] },
             { type: "roman", probability: 0.18, enabled: enabledPieces[1] },
             { type: "blocked", probability: 0.07, enabled: enabledPieces[2] },
             { type: "bubble", probability: 0.06, enabled: enabledPieces[3] },
@@ -375,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { type: "bomb", probability: 0.03, enabled: enabledPieces[8] },
             { type: "fire", probability: 0.04, enabled: enabledPieces[9] },
             { type: "rainbow", probability: 0.05, enabled: enabledPieces[10] },
+            { type: "updown", probability: 0.03, enabled: enabledPieces[11] },
         ];
         const totalProbability = typesWithProbabilities.reduce((sum, item) => sum + item.probability, 0);
         if (totalProbability !== 1) {
@@ -408,6 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [spritesheets.special, 6, true, 0], // bomb
             [spritesheets.special, 7, 'hide', 0], // fire
             [spritesheets.special, 8, true, 0], // rainbow
+            [spritesheets.updown, Math.floor(Math.random() * 2) + 1, true, 0], // updown
         ]
         return specialArray[index]
     }
@@ -580,12 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (buyButton.classList.contains("shake")) return;
         if (event.target === buyButton) {
             if (buyButton.style.opacity != 1) return;
-    
             let emptySpaces = gridItems
                 .map((piece, index) => (piece.enabled === "empty" ? index : null))
                 .filter((index) => index !== null);
-    
-            // Check if the piece can be bought
             if (
                 shopItems[buyButton.pieceIndex].enabled === 'empty' || 
                 money < shopItems[buyButton.pieceIndex].price || 
@@ -644,20 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: shopPiece.type,
                         value: shopPiece.value
                     });
-    
                     gridItems[randomIndex].element.classList.remove("shake");
                     gridItems[randomIndex].canvas.style.transition = "opacity 0.5s";
                     gridItems[randomIndex].canvas.style.opacity = "1";
-    
-                // Play the sound and update the money display
                 playAudio('/SFX/System_Update_Shop.ogg');
                 updateMoneyDisplay(-shopItems[buyButton.pieceIndex].price);
             }
         }
     });
     
-
-
     function handleGridClick(gridItem, element) {
         if (gridItem.enabled === false) {
             disabledPiece(gridItem)
@@ -747,19 +754,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function hideSelectedPieces(mode) {
         let totalPoints = 0;
-        let bubbles = 0
-        let colorFlash
+        let bubbles = 0;
+        let colorFlash;
+    
         selectedPieces.forEach(item => {
             if (mode === 'success') {
-                colorFlash = ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.3)']
+                colorFlash = ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.3)'];
             } else {
-                colorFlash = ['rgba(250, 0, 0, 0.8)', 'rgba(255, 0, 0, 0.5)']
+                colorFlash = ['rgba(250, 0, 0, 0.8)', 'rgba(255, 0, 0, 0.5)'];
             }
+            
             item.canvas.style.transition = "opacity 0.5s";
             item.canvas.style.opacity = "0";
-            playFlashAnimation(item.element, colorFlash[0], colorFlash[1])
+            playFlashAnimation(item.element, colorFlash[0], colorFlash[1]);
             item.element.classList.remove("selected");
             item.enabled = 'empty';
+            
             if (mode === 'success') {
                 totalPoints += item.points;
                 bubbles += destroyNearbyBubble(gridItems.indexOf(item));
@@ -771,21 +781,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500);
             }
         });
+    
         if (bubbles > 0) {
             totalPoints += bubbles;
             playAudio('/SFX/System_Bubble_Pop.ogg');
         }
+    
         if (mode === 'success') {
             updateMoneyDisplay(totalPoints * selectedPieces.length);
-            for (let i = 0; i < gridItems.length; i++) {
-                if (gridItems[i].type === 'roman' && gridItems[i].enabled) {
-                    updateRoman(i);
-                }
-            }
+            runFireAndRomanUpdates(); 
         }
+    
+        if (pieceBurned > 0) {
+            playAudio('/SFX/System_Fire.ogg');
+        }
+        pieceBurned = 0;
         selectedPieceValue = 0;
         selectedPieces = [];
     }
+    
 
     function updateRoll(piece) {
         reRolls += 1
@@ -878,6 +892,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    let pieceBurned = 0
+    function updateFire(item) {
+        function getRandomChoice() {
+            return Math.random() < 0.45 ? true : false;
+        }
+        let burnChance = getRandomChoice();
+        if (!burnChance) return pieceBurned; 
+        playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+        let centerIndex = gridItems.indexOf(item);
+        let centerX = centerIndex % gridSize;
+        let centerY = Math.floor(centerIndex / gridSize);
+        let nonEmptyPieces = [];
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                let newX = centerX + dx;
+                let newY = centerY + dy;
+                let newIndex = newY * gridSize + newX;
+                
+                if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
+                    let piece = gridItems[newIndex];
+                    if (piece !== item && piece.enabled !== 'empty' && piece.type !== 'blocked' &&
+                        piece.type !== 'fire' && selectedPieces.indexOf(piece) === -1) {
+                        nonEmptyPieces.push(piece);
+                    }
+                }
+            }
+        }
+        if (nonEmptyPieces.length > 0) {
+            pieceBurned += 1; 
+            let randomPiece = nonEmptyPieces[Math.floor(Math.random() * nonEmptyPieces.length)];
+            if (randomPiece.type === 'bomb') {
+                bombExplode(randomPiece);
+            } else {
+                randomPiece.enabled = 'empty';
+                randomPiece.canvas.style.transition = "opacity 0.5s";
+                randomPiece.canvas.style.opacity = "0";
+                randomPiece.isBurned = true; 
+                playFlashAnimation(randomPiece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+            }
+        } else {
+            item.enabled = 'empty';
+            item.canvas.style.transition = "opacity 0.5s";
+            item.canvas.style.opacity = "0";
+            item.isBurned = true; 
+            playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+            pieceBurned += 1;  
+        }
+    }
+    
+    
+    
+    function updateRoman(index) {
+        let item = gridItems[index];
+        if (item.type === 'roman' && !item.isBurned && item.enabled !== 'hide' && item.enabled !== 'empty') {
+            item.enabled = 'hide';
+            item.canvas.style.transition = "opacity 0.3s";
+            item.canvas.style.opacity = "0";
+            setTimeout(() => {
+                const ctx = item.canvas.getContext("2d");
+                ctx.clearRect(0, 0, item.canvas.width, item.canvas.height);
+                let newValues = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(value => value !== item.value);
+                const randomIndex = Math.floor(Math.random() * newValues.length);
+                const newNumber = newValues[randomIndex];
+                item.value = newNumber;
+                const spriteX = (newNumber - 1) * 36;
+                const spriteY = 0;
+                const offsetX = (item.canvas.width - 36) / 2;
+                const offsetY = (item.canvas.height - 36) / 2;
+                ctx.drawImage(spritesheets.roman, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+                item.enabled = true;
+                item.canvas.style.transition = "opacity 0.5s";
+                item.canvas.style.opacity = "1";
+            }, 500);
+        }
+    }
+    
+    
+    function runFireAndRomanUpdates() {
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'fire' && gridItems[i].enabled !== 'empty') {
+                updateFire(gridItems[i]);
+            }
+        }
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'roman' && gridItems[i].enabled !== 'empty') {
+                if (gridItems[i].isBurned) continue
+             updateRoman(i);
+            }
+        }
+    }
+    
+    
+    
+    
+
     function playFlashAnimation(element, color1, color2) {
         element.style.setProperty('--piece-color-start', color1);
         element.style.setProperty('--piece-color-mid', color2);
@@ -914,30 +1024,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updateRoman(index) {
-        let item = gridItems[index];
-        if (item.type === 'roman' && item.enabled !== 'hide' && item.enabled !== 'empty') {
-            item.enabled = 'hide';
-            item.canvas.style.transition = "opacity 0.3s";
-            item.canvas.style.opacity = "0";
-            setTimeout(() => {
-                const ctx = item.canvas.getContext("2d");
-                ctx.clearRect(0, 0, item.canvas.width, item.canvas.height);
-                let newValues = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(value => value !== item.value);
-                const randomIndex = Math.floor(Math.random() * newValues.length);
-                const newNumber = newValues[randomIndex];
-                item.value = newNumber;
-                const spriteX = (newNumber - 1) * 36;
-                const spriteY = 0;
-                const offsetX = (item.canvas.width - 36) / 2;
-                const offsetY = (item.canvas.height - 36) / 2;
-                ctx.drawImage(spritesheets.roman, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-                item.enabled = true;
-                item.canvas.style.transition = "opacity 0.3s";
-                item.canvas.style.opacity = "1";
-            }, 300);
-        }
-    }
 
     function destroyNearbyBubble(centerIndex) {
         let centerX = centerIndex % gridSize;

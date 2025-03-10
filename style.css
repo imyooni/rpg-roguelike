@@ -69,23 +69,24 @@ body {
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
-    animation: pieces-anim 500ms infinite linear; /* Fade-in and out effect */
+    animation: pieces-anim 500ms infinite alternate; /* Fade-in and out effect */
 }
 
 @keyframes pieces-anim {
     0% {
-        border-color:#fffb00;
+        border-color:#fc2600;
     }
     25% {
         border-color:#ffffff;
     }
     50% {
-        border-color:#fffb00;
+        border-color:#fc2600;
     }
     100% {
         border-color:#ffffff;
     }
 }
+
 
 @keyframes shake {
     0% { transform: translateX(0); }
@@ -174,25 +175,8 @@ body {
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
-    animation: shop-anim 500ms infinite alternate; /* Fade-in and out effect */
+    animation: pieces-anim 500ms infinite alternate; /* Fade-in and out effect */
 }
-
-/* Animation for fading border */
-@keyframes shop-anim {
-    0% {
-        border-color:#fc2600;
-    }
-    25% {
-        border-color:#ffffff;
-    }
-    50% {
-        border-color:#fc2600;
-    }
-    100% {
-        border-color:#ffffff;
-    }
-}
-
 
 .container {
     position: relative; /* Necessary for absolute positioning */

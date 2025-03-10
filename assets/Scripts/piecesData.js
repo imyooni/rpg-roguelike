@@ -11,7 +11,8 @@ export function Price(id) {
     35,
     60, 
     30,
-    55
+    55,
+    40
   ]
   return prices[id]
 }

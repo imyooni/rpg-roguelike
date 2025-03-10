@@ -131,30 +131,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     let audioContext;
-
-function initAudio() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffers = new Map(); // Store loaded audio buffers
+    
+    async function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioContext.state === "suspended") {
+            await audioContext.resume();
+        }
     }
-    if (audioContext.state === "suspended") {
-        audioContext.resume().catch((e) => console.warn("AudioContext resume failed:", e));
+    
+    // Function to load an audio file into memory
+    async function loadAudio(filePath) {
+        if (audioBuffers.has(filePath)) return; // Already loaded
+    
+        await initAudio();
+        try {
+            const response = await fetch(`./assets/Audio/${filePath}`);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            audioBuffers.set(filePath, audioBuffer);
+        } catch (error) {
+            console.error("Failed to load audio:", error);
+        }
     }
-}
+    
+    // Function to play an audio file
+    async function playAudio(filePath) {
+        await initAudio();
+    
+        // Load audio if it's not already in memory
+        if (!audioBuffers.has(filePath)) {
+            await loadAudio(filePath);
+        }
+    
+        const buffer = audioBuffers.get(filePath);
+        if (!buffer) return;
+    
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+    }
+    
+    
+    // Unlock audio on first user interaction (needed for mobile)
+    document.addEventListener("click", initAudio, { once: true });
+    document.addEventListener("touchstart", initAudio, { once: true });
 
-function playAudio(filePath) {
-    initAudio(); // Ensure AudioContext is initialized
-    const audio = new Audio(`./assets/Audio/${filePath}`);
-    audio.play().catch((e) => console.warn("Audio playback failed:", e));
-}
-
-// Ensure audio is allowed on mobile by initializing on first interaction
-document.addEventListener("click", () => {
-    initAudio();
-}, { once: true });
-
-document.addEventListener("touchstart", () => {
-    initAudio();
-}, { once: true });
 
     
 

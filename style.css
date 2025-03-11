@@ -3,13 +3,15 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     background: #a1a9af; /* Primary background */
+    overflow: auto; /* Allow scrolling */
+    min-height: 100%; /* Ensure the body is at least the height of the viewport */
+    cursor: url('./assets/Sprites/cursor.png'), auto; /* Set the custom cursor */
 }
 
-
-body {
-    cursor: url('./assets/Sprites/cursor.png'), auto; /* Set the custom cursor */
+html {
+    height: 100%; /* Ensure HTML element takes full height */
+    overflow: auto; /* Allow scrolling */
 }
 
 
@@ -22,7 +24,7 @@ body {
 
 .secondary-background {
     width: 358px;
-    height: 100vh; /* Full height */
+    height: 720px; /* Adjust based on your design */
     background: #5e5cb9; /* Secondary background color */
     display: flex;
     flex-direction: column;
@@ -38,6 +40,94 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+
+.goal-vocab {
+    position: absolute;
+    top: -55%;
+    right: -1px;
+    width: 100px;
+    height: 60px; /* Adjusted height to fit both lines */
+    background-color: #2b2d42;
+    color: #acd468;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px 0 0 10px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
+.goal {
+    color: gold; /* Apply gold color to the word "goal" */
+    font-weight: bold;
+    font-size: 24px; /* Bigger font size for "Goal" */
+    letter-spacing: 1px; /* Optional: Adjust letter spacing to improve readability */
+}
+
+.points {
+    color: white; /* Apply white color to the points */
+    font-size: 16px; /* Smaller font size for the points */
+    letter-spacing: 0.5px; /* Optional: Adjust letter spacing to improve readability */
+}
+
+/* Styling for the .endDay-vocab container */
+/* Styling for the .endDay-vocab container */
+.endDay-vocab {
+    position: absolute;
+    top: -35%;
+    right: -1px;
+    width: 100px;
+    height: 32px;
+    background-color: #a31829;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px 0 0 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    opacity: 0.5;
+    transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+/* Styling for the .endDay-text */
+.endDay-text {
+    color: white;  /* Initial color of text */
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;  /* Smooth transition for color change */
+}
+
+/* Hover effect for endDay-vocab */
+.endDay-vocab:hover {
+    opacity: 1.0;  /* Set opacity to 1 on hover */
+}
+
+.endDay-vocab:hover .endDay-text {
+    color: gold;  /* Change text color to gold when hovered */
+}
+
+
 
 .grid-item {
     width: 36px; 
@@ -115,6 +205,40 @@ body {
     image-rendering: pixelated;
 }
 
+.grid-border-image {
+    position: absolute;
+    background-image: url('./assets/Sprites/border.png');
+    bottom: 99.6%; 
+    left: 71%;
+    width: 45px; 
+    height: 45px;
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    image-rendering: pixelated;
+    z-index: 5;
+}
+
+.empty-border {
+    position: absolute;
+    background-image: url('./assets/Sprites/zuljaCoin.png');
+    background-size: 24px 24px;
+    background-repeat: no-repeat;
+    background-position: 5px center;
+    bottom: 99.6%; 
+    left: 5.5%;
+    width: 36px; 
+    height: 42px;
+    background-color: #6441a5;
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    border: 1px solid black;
+    border-radius: 5px 0 0 0;
+    image-rendering: pixelated;
+}
+
+
 .shop-vocab {
     position: absolute;
     bottom: -32%; 
@@ -130,6 +254,7 @@ body {
     font-size: 16px;
     z-index: 10; 
     border: 1px solid black;
+    border-radius: 10px;
     pointer-events: none; /* Disable pointer interactions */
     user-select: none; /* Disable text selection */
     text-shadow: 
@@ -149,6 +274,7 @@ body {
     width: 150px;
     height: 100px;
     background-color: #6c584c;
+    border-radius: 5px;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -221,33 +347,15 @@ body {
     z-index: 1; /* Reduced z-index */
 }
 
-
-.empty-border {
-    position: absolute;
-    background-image: url('./assets/Sprites/zuljaCoin.png');
-    background-size: 24px 24px;
-    background-repeat: no-repeat;
-    background-position: 5px center;
-    bottom: 99.6%; 
-    left: 5.5%;
-    width: 36px; 
-    height: 40px;
-    background-color: #6441a5;
-    display: flex;
-    justify-content: left;
-    align-items: left;
-    border: 1px solid black;
-    image-rendering: pixelated;
-}
-
 .money-border {
     position: absolute;
     bottom: 99.6%; 
     left: 50%;
     transform: translateX(-61%); 
     width: 200px;
-    height: 40px;
+    height: 42px;
     background-color: #333;
+    border-radius: 0 5px 0 0;
     text-align: center;
     display: flex;
     justify-content: left;
@@ -384,10 +492,9 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 5px;
-    z-index: 5;
+    z-index: 50;
     animation: piece-flash 0.2s ease-in-out;
 }
-
 
 .tooltip {
     position: absolute;
@@ -397,11 +504,10 @@ body {
     color: white;
     padding: 6px 10px;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 16px;
     white-space: nowrap;
     z-index: 1000;
     font-family: 'DefaultFont';
-    font-size: 14px;
     border: 1px solid black;
     pointer-events: none; /* Disable pointer interactions */
     user-select: none; /* Disable text selection */

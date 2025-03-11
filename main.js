@@ -10,9 +10,10 @@ let gridItems = [] //new Array(8*8).fill(null);
 let gridSize = 8;
 let cellSize = 36;
 let spacing = 4;
-let reRolls = 3;
+let reRolls = 5;
 let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
+let goalPoints = 250;  // Example points, this can be changed
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
     "reroll", "colors", "roman", "bomb", "fire",
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
 
-    shopVocab()
+   
 
     const spritesheets = {
         roll: new Image(),
@@ -113,11 +114,33 @@ document.addEventListener('DOMContentLoaded', () => {
             generateShopPieces();
             generateGridPieces();
             createReroll();
+            createGoal()
+            shopVocab()
         });
     }
 
     // 🎮 Load all spritesheets before generating pieces
     loadSpritesheets();
+
+    
+    function createGoal() {
+        const goalVocab = document.querySelector('.goal-vocab');
+        const goalText = document.createElement('div');
+        goalText.classList.add('goal');
+        goalText.textContent = "Goal";  // First word "goal" in gold color
+        const pointsText = document.createElement('div');
+        pointsText.classList.add('points');
+        pointsText.textContent = `${goalPoints}`;  // Points required in white color
+        goalVocab.appendChild(goalText);
+        goalVocab.appendChild(pointsText);
+    
+        const endDayVocab = document.querySelector('.endDay-vocab');
+        const endDayText = document.createElement('div');
+        endDayText.classList.add('endDay-text');
+        endDayText.textContent = "End Day";
+        endDayVocab.appendChild(endDayText);
+      }
+      
 
     function generateGridPieces() {
         gridContainer.innerHTML = ""
@@ -190,7 +213,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateReRollImage(ctx, reRollcanvas) {
-        let spriteX = reRolls * 34;
+        let index 
+        if (reRolls >= 5) {
+         index = 5
+        } else {
+         index = reRolls   
+        }
+        let spriteX = index * 34;
         let spriteY = 0;
         let offsetX = 0;
         let offsetY = 0;
@@ -236,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reRolls -= 1;
             playAudio("/SFX/System_ReRoll.ogg");
             reRollButton.classList.add("shake");
-
+           
             emptySpaces.forEach((index) => {
                 let piece = gridItems[index];
                 piece.canvas.style.transition = "opacity 0.5s";
@@ -387,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getRandomTypeByProbabilityWithDisableEffect(classId, reroll = false) {
         let enabledPieces = new Array(specialTypesList.length).fill(true);
-        let firePieces = 0
         if (classId === 'shop-item') {
             enabledPieces[2] = false;
             enabledPieces[5] = false;
@@ -559,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-        desc = wrapText(desc, 40); // Adjust maxLength as needed
+        desc = wrapText(desc, 36); // Adjust maxLength as needed
         tooltip.innerText = desc; // Use innerHTML if using "<br>" instead of "\n"
         secondaryBackground.appendChild(tooltip);
         tooltip.style.position = "absolute";

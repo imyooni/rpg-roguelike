@@ -22,15 +22,16 @@ export function Description(id) {
         "Combine different pieces to reach a total of 10 points.", // normal
         "A blocked piece that does nothing.", // blocked
         "This piece can pair with any number to make 10 points.", // star
-        "Explodes when a nearby piece is destroyed.", // bubble
+        "This piece is destroyed when a nearby piece is destroyed.", // bubble
         "Refreshes the available pieces in the shop.", // shop
         `Combine "Zul" pieces to get a special reward.`, // zul
         "Gain an extra reroll to refresh empty spaces.", // reroll
         "Match two pieces of the same color to score 10 points.", // colors
         "These pieces change every turn.", // roman
-        "Destroys all pieces in a 3x3 area upon activation.", // bomb
+        "Destroys all pieces in a 3x3 area.", // bomb
         "Randomly destroy nearby pieces.", // fire
-        "Transforms certain numbers into colors." // rainbow
+        "Transforms certain numbers into colors.", // rainbow
+        "Change number values." // updown
       ];      
     return desc[id]
   }

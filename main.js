@@ -16,7 +16,7 @@ let money = 0; //Math.floor(Math.random() * 9999999);
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
     "reroll", "colors", "roman", "bomb", "fire",
-    "rainbow","updown"];
+    "rainbow", "updown"];
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
 
+    shopVocab()
+
     const spritesheets = {
         roll: new Image(),
         numbers: new Image(),
@@ -78,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         roman: new Image(),
         special: new Image(),
         zul: new Image(),
-        updown: new Image(),
     };
 
     function loadSpritesheets() {
@@ -107,10 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 spritesheets.roll.src = "./assets/Sprites/reRollButton.png";
                 spritesheets.roll.onload = resolve;
             }),
-            new Promise((resolve) => {
-                spritesheets.updown.src = "./assets/Sprites/updown.png";
-                spritesheets.updown.onload = resolve;
-            }),
         ];
         Promise.all(loadPromises).then(() => {
             generateShopPieces();
@@ -132,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let audioContext;
     const audioBuffers = new Map(); // Store loaded audio buffers
-    
+
     async function initAudio() {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -141,11 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
             await audioContext.resume();
         }
     }
-    
+
     // Function to load an audio file into memory
     async function loadAudio(filePath) {
         if (audioBuffers.has(filePath)) return; // Already loaded
-    
+
         await initAudio();
         try {
             const response = await fetch(`./assets/Audio/${filePath}`);
@@ -156,34 +153,34 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to load audio:", error);
         }
     }
-    
+
     // Function to play an audio file
     async function playAudio(filePath) {
         await initAudio();
-    
+
         // Load audio if it's not already in memory
         if (!audioBuffers.has(filePath)) {
             await loadAudio(filePath);
         }
-    
+
         const buffer = audioBuffers.get(filePath);
         if (!buffer) return;
-    
+
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
         source.connect(audioContext.destination);
         source.start(0);
     }
-    
 
-    
-    
+
+
+
     // Unlock audio on first user interaction (needed for mobile)
     document.addEventListener("click", initAudio, { once: true });
     document.addEventListener("touchstart", initAudio, { once: true });
 
 
-    
+
 
     function generateShopPieces() {
         shopContainer.innerHTML = "";
@@ -207,26 +204,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         reRollButton = document.createElement("div"); // Assign globally
         reRollButton.classList.add("shuffle-item");
-    
+
         Object.assign(reRollButton.style, {
             width: "34px",
             height: "64px",
             position: "absolute",
         });
-    
+
         reRollcanvas.width = 34;
         reRollcanvas.height = 64;
         const ctx = reRollcanvas.getContext("2d");
         ctx.imageSmoothingEnabled = false;
         updateReRollImage(ctx, reRollcanvas);
-    
+
         reRollButton.addEventListener("click", function () {
             if (reRollButton.classList.contains("shake")) return;
-    
+
             let emptySpaces = gridItems
                 .map((piece, index) => (piece.enabled === "empty" ? index : null))
                 .filter((index) => index !== null);
-    
+
             if (reRolls <= 0 || emptySpaces.length === 0) {
                 playAudio("/SFX/System_Piece_Disabled.ogg");
                 reRollButton.classList.add("shake");
@@ -235,11 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 return;
             }
-    
+
             reRolls -= 1;
             playAudio("/SFX/System_ReRoll.ogg");
             reRollButton.classList.add("shake");
-    
+
             emptySpaces.forEach((index) => {
                 let piece = gridItems[index];
                 piece.canvas.style.transition = "opacity 0.5s";
@@ -247,17 +244,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 generatePiece(index, gridContainer, "grid-item", null, true);
                 piece.element.classList.add("shake");
             });
-    
+
             reRollButton.addEventListener("animationend", () => {
                 reRollButton.classList.remove("shake");
                 emptySpaces.forEach((index) => gridItems[index].element.classList.remove("shake"));
             });
-    
+
             updateReRollImage(ctx, reRollcanvas);
         });
-    
+
         reRollButton.appendChild(reRollcanvas);
-    
+
         let shuffleContainer = document.querySelector(".shuffle-item");
         if (shuffleContainer) {
             shuffleContainer.appendChild(reRollButton);
@@ -265,22 +262,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Warning: .shuffle-item container not found.");
         }
     }
-    
+
     function generatePiece(index, container, classId, fixedType = null, reroll = false) {
         let specialValue = (classId === 'shop-item') ? 0.60 : 0.25;
-    
+
         function getRandomChoice() {
             return Math.random() < specialValue ? 'special' : 'normal';
         }
-    
+
         let pieceChoice = (fixedType !== "normal" && fixedType !== null) ? "special" : getRandomChoice();
         let id = 0, price, pieceType = 'numbers', enabled = true, points = 1;
         let spriteKey, randomNumber, value;
-    
-        if (pieceChoice === "normal" || fixedType === "normal") {
+
+        if (pieceChoice === "normal" || fixedType === "normal" || fixedType === "updown_numbers") {
             price = pieceData.Price(0);
             spriteKey = spritesheets.numbers;
-            randomNumber = getRandomNumber();
+            if (fixedType === "updown_numbers") {
+                randomNumber = Math.floor(Math.random() * 9) + 1
+            } else {
+                randomNumber = getRandomNumber();
+            }
             value = (randomNumber === 10) ? Math.floor(Math.random() * 9) + 1 : randomNumber;
         } else {
             let specialPiece = fixedType || getRandomTypeByProbabilityWithDisableEffect(classId, reroll);
@@ -299,23 +300,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 value = (randomNumber === 10) ? Math.floor(Math.random() * 9) + 1 : randomNumber;
             }
         }
-    
+
         let spriteX = (randomNumber - 1) * 36;
         let spriteY = 0;
         let offsetX = (cellSize - 36) / 2;
         let offsetY = offsetX;
-    
+
         let piecesList = (classId === "grid-item") ? gridItems : shopItems;
         let existingItem = piecesList[index];
-    
+
         if (existingItem) {
             // Reuse existing canvas, update only necessary properties
             let ctx = existingItem.canvas.getContext("2d");
             ctx.clearRect(0, 0, cellSize, cellSize);
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-    
+
             Object.assign(existingItem, { enabled, points, value, price, id, type: pieceType, isSelected: false });
-    
+
             if (classId === "shop-item") {
                 existingItem.enabled = true;
                 let tooltip = existingItem.element.querySelector(".tooltip-text");
@@ -326,23 +327,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const cell = document.createElement("div");
             cell.classList.add(classId);
             Object.assign(cell.style, { width: `${cellSize}px`, height: `${cellSize}px`, position: "relative" });
-    
+
             const canvas = document.createElement("canvas");
             Object.assign(canvas.style, { transition: "opacity 0.5s", opacity: "0" });
             Object.assign(canvas, { width: cellSize, height: cellSize });
-    
+
             const ctx = canvas.getContext("2d");
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-            
+
             cell.appendChild(canvas);
             container.appendChild(cell);
-    
+
             let pieceDataObj = { element: cell, canvas, id, enabled, points, price, value, type: pieceType, isSelected: false };
             requestAnimationFrame(() => (canvas.style.opacity = "1"));
-    
+
             piecesList[index] = pieceDataObj;
-    
+
             if (classId === "shop-item") {
                 pieceDataObj.enabled = true;
                 let tooltip = document.createElement("span");
@@ -352,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    
+
 
     function getRandomNumber() {
         const numbersProbabilities = [
@@ -384,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return 10;
     }
 
-    function getRandomTypeByProbabilityWithDisableEffect(classId,reroll = false) {
+    function getRandomTypeByProbabilityWithDisableEffect(classId, reroll = false) {
         let enabledPieces = new Array(specialTypesList.length).fill(true);
         let firePieces = 0
         if (classId === 'shop-item') {
@@ -449,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             [spritesheets.special, 6, true, 0], // bomb
             [spritesheets.special, 7, 'hide', 0], // fire
             [spritesheets.special, 8, true, 0], // rainbow
-            [spritesheets.updown, Math.floor(Math.random() * 2) + 1, true, 0], // updown
+            [spritesheets.special, 9, true, 0], // updown
         ]
         return specialArray[index]
     }
@@ -463,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clickedItem = event.target.closest(".grid-item, .shop-item");
         }
         if (!clickedItem) return;
-         
+
         let gridItem = gridItems.find(item => item.element === clickedItem);
         let shopItem = shopItems.find(item => item.element === clickedItem);
 
@@ -536,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let toolTipItem = null
     function showTooltip(element, event) {
-        let desc = ""; 
+        let desc = "";
         let gridItem = gridItems.find(item => item.element === element);
         let shopItem = shopItems.find(item => item.element === element)
         if (gridItem) {
@@ -617,6 +618,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    //█===== 
+    // shop //
+    function shopVocab() {
+        let vocabElement = document.querySelector('.shop-vocab');
+        vocabElement.innerText = "Shop";
+    }
+
     document.addEventListener("click", function (event) {
         const buyButton = document.querySelector('.buy-button');
         if (buyButton.classList.contains("shake")) return;
@@ -626,11 +634,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map((piece, index) => (piece.enabled === "empty" ? index : null))
                 .filter((index) => index !== null);
             if (
-                shopItems[buyButton.pieceIndex].enabled === 'empty' || 
-                money < shopItems[buyButton.pieceIndex].price || 
+                shopItems[buyButton.pieceIndex].enabled === 'empty' ||
+                money < shopItems[buyButton.pieceIndex].price ||
                 emptySpaces.length === 0
             ) {
-                playAudio('/SFX/System_Piece_Disabled.ogg');   
+                playAudio('/SFX/System_Piece_Disabled.ogg');
                 buyButton.classList.add("shake");
                 buyButton.addEventListener("animationend", () => {
                     buyButton.classList.remove("shake");
@@ -656,47 +664,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 tooltip.classList.remove("show");
                 buyButton.style.transition = "opacity 0.3s";
                 buyButton.style.opacity = "0";
-                    let enabled;
-                    let spriteX = (shopPiece.value - 1) * 36;
-                    let spriteY = 0;
-                    let offsetX = (cellSize - 36) / 2;
-                    let offsetY = offsetX;
-                    let existingItem = gridItems[randomIndex];
-                    let spriteKey;
-                    let pieceData = getSpecialData(shopPiece.id - 1);
-                    if (shopPiece.id == 0) {
-                        enabled = true;
-                        spriteKey = spritesheets.numbers;
-                    } else {
-                        spriteKey = pieceData[0];
-                        enabled = pieceData[2];
-                    }
-                    let ctx = existingItem.canvas.getContext("2d");
-                    ctx.clearRect(0, 0, cellSize, cellSize);
-                    ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-                    Object.assign(existingItem, {
-                        enabled: enabled, 
-                        id: shopPiece.id,
-                        isSelected: false,
-                        points: shopPiece.points,
-                        price: 0,
-                        type: shopPiece.type,
-                        value: shopPiece.value
-                    });
-                    gridItems[randomIndex].element.classList.remove("shake");
-                    gridItems[randomIndex].canvas.style.transition = "opacity 0.5s";
-                    gridItems[randomIndex].canvas.style.opacity = "1";
+                let enabled;
+                let spriteX = (shopPiece.value - 1) * 36;
+                let spriteY = 0;
+                let offsetX = (cellSize - 36) / 2;
+                let offsetY = offsetX;
+                let existingItem = gridItems[randomIndex];
+                let spriteKey;
+                let pieceData = getSpecialData(shopPiece.id - 1);
+                if (shopPiece.id == 0) {
+                    enabled = true;
+                    spriteKey = spritesheets.numbers;
+                } else {
+                    spriteKey = pieceData[0];
+                    enabled = pieceData[2];
+                }
+                let ctx = existingItem.canvas.getContext("2d");
+                ctx.clearRect(0, 0, cellSize, cellSize);
+                ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+                Object.assign(existingItem, {
+                    enabled: enabled,
+                    id: shopPiece.id,
+                    isSelected: false,
+                    points: shopPiece.points,
+                    price: 0,
+                    type: shopPiece.type,
+                    value: shopPiece.value
+                });
+                gridItems[randomIndex].element.classList.remove("shake");
+                gridItems[randomIndex].canvas.style.transition = "opacity 0.5s";
+                gridItems[randomIndex].canvas.style.opacity = "1";
                 playAudio('/SFX/System_Update_Shop.ogg');
                 updateMoneyDisplay(-shopItems[buyButton.pieceIndex].price);
             }
         }
     });
-    
+
     function handleGridClick(gridItem, element) {
         if (gridItem.enabled === false) {
             disabledPiece(gridItem)
             return
         } else if (gridItem.enabled === 'hide' || gridItem.enabled === 'empty') {
+            return
+        } else if (gridItem.type === 'updown') {
+            updown(gridItem);
             return
         } else if (gridItem.type === 'reroll') {
             updateRoll(gridItem)
@@ -720,8 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gridItem.isSelected = !gridItem.isSelected;
         element.classList.toggle('selected');
         const buyButton = document.querySelector('.buy-button');
-       buyButton.style.transition = "opacity 0.3s";
-       buyButton.style.opacity = "0";
+        buyButton.style.transition = "opacity 0.3s";
+        buyButton.style.opacity = "0";
 
         if (tooltip) {
             tooltip.classList.remove("show")
@@ -781,20 +792,20 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalPoints = 0;
         let bubbles = 0;
         let colorFlash;
-    
+
         selectedPieces.forEach(item => {
             if (mode === 'success') {
                 colorFlash = ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.3)'];
             } else {
                 colorFlash = ['rgba(250, 0, 0, 0.8)', 'rgba(255, 0, 0, 0.5)'];
             }
-            
+
             item.canvas.style.transition = "opacity 0.5s";
             item.canvas.style.opacity = "0";
             playFlashAnimation(item.element, colorFlash[0], colorFlash[1]);
             item.element.classList.remove("selected");
             item.enabled = 'empty';
-            
+
             if (mode === 'success') {
                 totalPoints += item.points;
                 bubbles += destroyNearbyBubble(gridItems.indexOf(item));
@@ -806,17 +817,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500);
             }
         });
-    
+
         if (bubbles > 0) {
             totalPoints += bubbles;
             playAudio('/SFX/System_Bubble_Pop.ogg');
         }
-    
+
         if (mode === 'success') {
             updateMoneyDisplay(totalPoints * selectedPieces.length);
-            runFireAndRomanUpdates(); 
+            runFireAndRomanUpdates();
         }
-    
+
         if (pieceBurned > 0) {
             playAudio('/SFX/System_Fire.ogg');
         }
@@ -824,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedPieceValue = 0;
         selectedPieces = [];
     }
-    
+
 
     function updateRoll(piece) {
         reRolls += 1
@@ -879,9 +890,53 @@ document.addEventListener('DOMContentLoaded', () => {
             if (updatedPieces > 0 && breakChance) break;
             updatedPieces += 1;
         }
+    }
 
 
-
+    function updown(item) {
+        item.enabled = 'empty';
+        item.canvas.style.transition = "opacity 0.5s";
+        item.canvas.style.opacity = "0";
+        playFlashAnimation(item.element, 'rgba(255, 172, 172, 0.8)', 'rgba(179, 255, 172, 0.8)')
+        playAudio('/SFX/System_Updown.ogg');
+        let updatedPieces = 0;
+        const indexes = [...gridItems.keys()];
+        for (let i = indexes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+        }
+        for (let i = 0; i < indexes.length; i++) {
+            let index = indexes[i];
+            if (gridItems[index].enabled === 'empty') continue
+            if (gridItems[index].type !== 'numbers') continue
+            let color = Math.random() < 0.5;
+            let animColor;
+            if (color) {
+             animColor = ['rgba(255, 172, 172, 0.8)','rgba(184, 78, 78, 0.5)']
+            } else {
+             animColor = ['rgba(179, 255, 172, 0.8)','rgba(96, 184, 78, 0.5)']
+            }
+            playFlashAnimation(gridItems[index].element, animColor[0], animColor[1])
+            gridItems[index].element.classList.add("shake");
+            gridItems[index].enabled = 'empty';
+            gridItems[index].canvas.style.transition = "opacity 0.5s";
+            gridItems[index].canvas.style.opacity = "0";
+            let rainbowSelected = selectedPieces.indexOf(gridItems[index])
+            if (rainbowSelected != -1) {
+                selectedPieces[rainbowSelected].element.classList.remove("selected");
+                selectedPieceValue -= gridItems[index].value;
+                selectedPieces = selectedPieces.filter(item => item !== gridItems[index]);
+            }
+            setTimeout(() => {
+                generatePiece(index, shopContainer, "grid-item", "updown_numbers");
+                gridItems[index].element.classList.remove("shake");
+                gridItems[index].canvas.style.transition = "opacity 0.5s";
+                gridItems[index].canvas.style.opacity = "1";
+            }, 500);
+            let breakChance = Math.random() < 0.25;
+            if (updatedPieces > 0 && breakChance) break;
+            updatedPieces += 1;
+        }
     }
 
     function bombExplode(item) {
@@ -924,7 +979,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return Math.random() < 0.45 ? true : false;
         }
         let burnChance = getRandomChoice();
-        if (!burnChance) return pieceBurned; 
+        if (!burnChance) return pieceBurned;
         playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
         let centerIndex = gridItems.indexOf(item);
         let centerX = centerIndex % gridSize;
@@ -935,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let newX = centerX + dx;
                 let newY = centerY + dy;
                 let newIndex = newY * gridSize + newX;
-                
+
                 if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
                     let piece = gridItems[newIndex];
                     if (piece !== item && piece.enabled !== 'empty' && piece.type !== 'blocked' &&
@@ -946,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (nonEmptyPieces.length > 0) {
-            pieceBurned += 1; 
+            pieceBurned += 1;
             let randomPiece = nonEmptyPieces[Math.floor(Math.random() * nonEmptyPieces.length)];
             if (randomPiece.type === 'bomb') {
                 bombExplode(randomPiece);
@@ -954,21 +1009,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 randomPiece.enabled = 'empty';
                 randomPiece.canvas.style.transition = "opacity 0.5s";
                 randomPiece.canvas.style.opacity = "0";
-                randomPiece.isBurned = true; 
+                randomPiece.isBurned = true;
                 playFlashAnimation(randomPiece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
             }
         } else {
             item.enabled = 'empty';
             item.canvas.style.transition = "opacity 0.5s";
             item.canvas.style.opacity = "0";
-            item.isBurned = true; 
+            item.isBurned = true;
             playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
-            pieceBurned += 1;  
+            pieceBurned += 1;
         }
     }
-    
-    
-    
+
+
     function updateRoman(index) {
         let item = gridItems[index];
         if (item.type === 'roman' && !item.isBurned && item.enabled !== 'hide' && item.enabled !== 'empty') {
@@ -993,8 +1047,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500);
         }
     }
-    
-    
+
+
     function runFireAndRomanUpdates() {
         for (let i = 0; i < gridItems.length; i++) {
             if (gridItems[i].type === 'fire' && gridItems[i].enabled !== 'empty') {
@@ -1004,14 +1058,11 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < gridItems.length; i++) {
             if (gridItems[i].type === 'roman' && gridItems[i].enabled !== 'empty') {
                 if (gridItems[i].isBurned) continue
-             updateRoman(i);
+                updateRoman(i);
             }
         }
     }
-    
-    
-    
-    
+
 
     function playFlashAnimation(element, color1, color2) {
         element.style.setProperty('--piece-color-start', color1);

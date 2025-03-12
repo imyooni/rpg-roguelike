@@ -24,14 +24,30 @@ html {
 
 .secondary-background {
     width: 358px;
-    height: 720px; /* Adjust based on your design */
-    background: #5e5cb9; /* Secondary background color */
+    height: 720px;
+    background: #5e5cb9;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid black; /* 1px border */
+    border: 1px solid black;
+    position: relative; /* Important to contain absolute children */
 }
+
+.pause-background {
+    width: 358px;
+    height: 721px;
+    background: #000000;
+    opacity: 0.5;
+    position: absolute;
+    top: -55%;
+    left: 0%;
+    z-index: 1000;
+    display: none; /* Hide initially */
+    pointer-events: none; /* Prevent interactions */
+}
+
+
 
 .container {
     width: 100%;
@@ -42,14 +58,39 @@ html {
 }
 
 
+.dayCount-vocab {
+    position: absolute;
+    top: -54%;
+    left: -1px;
+    width: 100px;
+    height: 60px; /* Adjusted height to fit both lines */
+    background-color: #2b2d42;
+    color: rgb(0, 255, 191);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 0 10px 10px 0;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
 .goal-vocab {
     position: absolute;
-    top: -55%;
+    top: -54%;
     right: -1px;
     width: 100px;
     height: 60px; /* Adjusted height to fit both lines */
     background-color: #2b2d42;
-    color: #acd468;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -70,7 +111,6 @@ html {
 
 .goal {
     color: gold; /* Apply gold color to the word "goal" */
-    font-weight: bold;
     font-size: 24px; /* Bigger font size for "Goal" */
     letter-spacing: 1px; /* Optional: Adjust letter spacing to improve readability */
 }
@@ -81,7 +121,6 @@ html {
     letter-spacing: 0.5px; /* Optional: Adjust letter spacing to improve readability */
 }
 
-/* Styling for the .endDay-vocab container */
 /* Styling for the .endDay-vocab container */
 .endDay-vocab {
     position: absolute;
@@ -127,6 +166,88 @@ html {
     color: gold;  /* Change text color to gold when hovered */
 }
 
+
+.endayConfirmation-vocab {
+    position: absolute; /* Fixed position relative to the viewport */
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    width: 100px;
+    height: 60px;
+    background-color: #2b2d42;
+    visibility: hidden; /* Initially invisible but still occupies space */
+    color: gold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 2000;
+    border: 1px solid black;
+    border-radius: 10px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
+.endayConfirmation-yes {
+    position: absolute; /* Fixed position relative to the viewport */
+    top: 40%;
+    left: 40%;
+    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    width: 50px;
+    height: 30px;
+    background-color: #2b2d42;
+    visibility: hidden; /* Initially invisible but still occupies space */
+    color: greenyellow;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 2000;
+    border: 1px solid black;
+    border-radius: 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
+.endayConfirmation-no {
+    position: absolute; /* Fixed position relative to the viewport */
+    top: 40%;
+    left: 60%;
+    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    width: 50px;
+    height: 30px;
+    background-color: #2b2d42;
+    visibility: hidden; /* Initially invisible but still occupies space */
+    color: red;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 2000;
+    border: 1px solid black;
+    border-radius: 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
 
 
 .grid-item {
@@ -209,7 +330,7 @@ html {
     position: absolute;
     background-image: url('./assets/Sprites/border.png');
     bottom: 99.6%; 
-    left: 71%;
+    left: 70%;
     width: 45px; 
     height: 45px;
     display: flex;
@@ -241,8 +362,8 @@ html {
 
 .shop-vocab {
     position: absolute;
-    bottom: -32%; 
-    left: 16%;
+    bottom: -34%; 
+    left: 35.5%;
     width: 100px; 
     height: 30px;
     background-color: #2b2d42;
@@ -252,9 +373,9 @@ html {
     align-items: center;
     font-family: 'DefaultFont';
     font-size: 16px;
-    z-index: 10; 
+    z-index: 0; 
     border: 1px solid black;
-    border-radius: 10px;
+    border-radius: 0 0 10px 10px;
     pointer-events: none; /* Disable pointer interactions */
     user-select: none; /* Disable text selection */
     text-shadow: 
@@ -341,7 +462,7 @@ html {
     bottom: 85%; 
     right: 5.5%;
     width: 34px; 
-    height: 64px;
+    height: 67px;
     display: flex;
     image-rendering: pixelated;
     z-index: 1; /* Reduced z-index */

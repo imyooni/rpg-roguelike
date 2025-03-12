@@ -10,9 +10,10 @@ let gridItems = [] //new Array(8*8).fill(null);
 let gridSize = 8;
 let cellSize = 36;
 let spacing = 4;
-let reRolls = 5;
+let reRolls = 3;
 let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
+let dayCount = 1;
 let goalPoints = 250;  // Example points, this can be changed
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
@@ -34,7 +35,7 @@ async function playBGM() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioContext.createGain(); // Create volume control
 
-        const response = await fetch('./assets/Audio/BGM/bgm001.ogg');
+        const response = await fetch('./assets/Audio/BGM/bgm002.ogg');
         const audioData = await response.arrayBuffer();
         const buffer = await audioContext.decodeAudioData(audioData);
 
@@ -45,18 +46,12 @@ async function playBGM() {
         bgmSource.connect(gainNode);
         gainNode.connect(audioContext.destination);
 
-        //   bgmSource.start();
-        gainNode.gain.value = 0.5; // 50% volume
+        bgmSource.start();
+        gainNode.gain.value = 0.4; // 50% volume
     }
 }
 
 document.body.addEventListener("click", playBGM, { once: true });
-
-function setVolume(value) {
-    if (gainNode) {
-        gainNode.gain.value = value; // Value between 0 and 1
-    }
-}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -72,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
 
-   
+
 
     const spritesheets = {
         roll: new Image(),
@@ -122,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🎮 Load all spritesheets before generating pieces
     loadSpritesheets();
 
-    
+
     function createGoal() {
         const goalVocab = document.querySelector('.goal-vocab');
         const goalText = document.createElement('div');
@@ -133,14 +128,20 @@ document.addEventListener('DOMContentLoaded', () => {
         pointsText.textContent = `${goalPoints}`;  // Points required in white color
         goalVocab.appendChild(goalText);
         goalVocab.appendChild(pointsText);
-    
+
         const endDayVocab = document.querySelector('.endDay-vocab');
         const endDayText = document.createElement('div');
         endDayText.classList.add('endDay-text');
         endDayText.textContent = "End Day";
         endDayVocab.appendChild(endDayText);
-      }
-      
+
+        const dayCountVocab = document.querySelector('.dayCount-vocab');
+        const dayCountText = document.createElement('div');
+        dayCountText.classList.add('dayCount-text');
+        dayCountText.textContent = `Day ${dayCount}`;
+        dayCountVocab.appendChild(dayCountText);
+    }
+
 
     function generateGridPieces() {
         gridContainer.innerHTML = ""
@@ -204,6 +205,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    // Function to add (show) the pause background
+    function showPauseBackground() {
+        let pauseBg = document.querySelector('.pause-background');
+
+        // If the element does not exist, create it
+        if (!pauseBg) {
+            pauseBg = document.createElement('div');
+            pauseBg.classList.add('pause-background');
+            document.body.appendChild(pauseBg);
+        }
+
+        // Make it visible and enable interaction blocking
+        pauseBg.style.display = 'block';
+        pauseBg.style.pointerEvents = 'auto'; // Block interactions with elements underneath
+    }
+
+    // Function to hide the pause background
+    function hidePauseBackground() {
+        const pauseBg = document.querySelector('.pause-background');
+        if (pauseBg) {
+            pauseBg.style.display = 'none';
+            pauseBg.style.pointerEvents = 'none'; // Allow interactions again
+        }
+    }
+
+
 
     function generateShopPieces() {
         shopContainer.innerHTML = "";
@@ -213,18 +240,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateReRollImage(ctx, reRollcanvas) {
-        let index 
+        let index
         if (reRolls >= 5) {
-         index = 5
+            index = 5
         } else {
-         index = reRolls   
+            index = reRolls
         }
         let spriteX = index * 34;
         let spriteY = 0;
         let offsetX = 0;
         let offsetY = 0;
         ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
-        ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 64, offsetX, offsetY, 34, 64);
+        ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
     }
 
     function createReroll() {
@@ -236,12 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         Object.assign(reRollButton.style, {
             width: "34px",
-            height: "64px",
+            height: "67px",
             position: "absolute",
         });
 
         reRollcanvas.width = 34;
-        reRollcanvas.height = 64;
+        reRollcanvas.height = 67;
         const ctx = reRollcanvas.getContext("2d");
         ctx.imageSmoothingEnabled = false;
         updateReRollImage(ctx, reRollcanvas);
@@ -265,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reRolls -= 1;
             playAudio("/SFX/System_ReRoll.ogg");
             reRollButton.classList.add("shake");
-           
+
             emptySpaces.forEach((index) => {
                 let piece = gridItems[index];
                 piece.canvas.style.transition = "opacity 0.5s";
@@ -569,10 +596,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let gridItem = gridItems.find(item => item.element === element);
         let shopItem = shopItems.find(item => item.element === element)
         if (gridItem) {
+            if (gridItem.enabled === 'empty') return
             desc = pieceData.Description(gridItem.id);
             toolTipItem = [gridItem, gridItem.enabled]
             gridItem.enabled = 'hide';
         } else if (shopItem) {
+            if (shopItem.enabled === 'empty') return
             desc = pieceData.Description(shopItem.id);
             toolTipItem = [shopItem, shopItem.enabled]
             shopItem.enabled = 'hide';
@@ -587,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-        desc = wrapText(desc, 36); // Adjust maxLength as needed
+        desc = wrapText(desc, 100); // Adjust maxLength as needed
         tooltip.innerText = desc; // Use innerHTML if using "<br>" instead of "\n"
         secondaryBackground.appendChild(tooltip);
         tooltip.style.position = "absolute";
@@ -600,18 +629,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hideTooltip() {
-        setTimeout(() => {
-            if (toolTipItem !== null) {
-                toolTipItem[0].enabled = toolTipItem[1]
-                toolTipItem = null
-            }
-        }, 10);
         let tooltips = document.querySelectorAll(".tooltip");
         tooltips.forEach(tooltip => tooltip.remove());
     }
 
 
     function handleShopClick(shopItem, element) {
+        setTimeout(() => {
+            if (toolTipItem !== null) {
+                toolTipItem[0].enabled = toolTipItem[1]
+                toolTipItem = null
+            }
+        }, 1);
         if (shopItem.enabled === 'empty' || shopItem.enabled === 'hide') {
             return
         }
@@ -645,6 +674,102 @@ document.addEventListener('DOMContentLoaded', () => {
             buyButton.style.opacity = "0";
         }
     }
+
+    //█========█// 
+    // END DAY //
+    //█========█//
+document.addEventListener("click", function (event) {
+    const endDayButton = document.querySelector('.endDay-vocab');
+    if (endDayButton.contains(event.target)) {
+        showPauseBackground(); // Ensure this function is defined
+        playAudio('/SFX/System_Selected_Piece.ogg');
+        let endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
+        endayConfirmVocab.style.visibility = "visible"; // Make it visible
+
+        const yesText = document.querySelector('.endayConfirmation-yes');
+        yesText.style.visibility = "visible"; // Make it visible
+        const yesConfirmText = document.createElement('div');
+        yesConfirmText.classList.add('dayCount-text');
+        yesConfirmText.textContent = `Yes`; // Add your custom text here
+        yesText.appendChild(yesConfirmText); // Append the text to the yesText element
+
+        const noText = document.querySelector('.endayConfirmation-no');
+        noText.style.visibility = "visible"; // Make it visible
+        const noConfirmText = document.createElement('div');
+        noConfirmText.classList.add('dayCount-text');
+        noConfirmText.textContent = `No`; // Add your custom text here
+        noText.appendChild(noConfirmText); // Append the text to the noText element
+
+        // Create and append new text
+        const endayConfirmText = document.createElement('div');
+        endayConfirmText.classList.add('dayCount-text');
+        endayConfirmText.textContent = `Finish?`;
+        endayConfirmVocab.appendChild(endayConfirmText);
+    }
+
+    // Check if the "Yes" button was clicked
+    const yesText = document.querySelector('.endayConfirmation-yes');
+    if (yesText.contains(event.target)) {
+        if (reRolls < 5) { 
+            reRolls += 3
+            if (reRolls > 5) {reRolls = 5}
+            playAudio('/SFX/System_ReRoll.ogg');
+            const ctx = reRollcanvas.getContext("2d");
+            ctx.imageSmoothingEnabled = false;
+            updateReRollImage(ctx, reRollcanvas);
+            reRollButton.classList.add("shake");
+            reRollButton.addEventListener("animationend", () => {
+                reRollButton.classList.remove("shake");
+            });
+        }
+        playAudio('/SFX/System_Money.ogg');
+        updateMoneyDisplay(-goalPoints);
+        hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
+    }
+
+    // Check if the "No" button was clicked
+    const noText = document.querySelector('.endayConfirmation-no');
+    if (noText.contains(event.target)) {
+        playAudio('/SFX/System_Cancel.ogg');
+        hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
+    }
+});
+
+// Function to hide the confirmation menu
+function hideconfirmationMenu() {
+    // Hide the confirmation vocab
+    hidePauseBackground(); // Hide the pause background if needed
+    const endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
+    endayConfirmVocab.style.visibility = "hidden"; // Hide the confirmation
+
+    // Hide the yesText and noText elements as well
+    const yesText = document.querySelector('.endayConfirmation-yes');
+    yesText.style.visibility = "hidden"; // Hide the yes option
+    const noText = document.querySelector('.endayConfirmation-no');
+    noText.style.visibility = "hidden"; // Hide the no option
+
+    // Remove the dynamically created text elements from both yes and no
+    const yesConfirmText = yesText.querySelector('.dayCount-text');
+    if (yesConfirmText) {
+        yesConfirmText.remove();
+    }
+
+    const noConfirmText = noText.querySelector('.dayCount-text');
+    if (noConfirmText) {
+        noConfirmText.remove();
+    }
+
+    // Also, remove the "Finish?" text if you want to hide everything
+    const endayConfirmText = endayConfirmVocab.querySelector('.dayCount-text');
+    if (endayConfirmText) {
+        endayConfirmText.remove();
+    }
+}
+
+
+
+
+
 
     //█===== 
     // shop //
@@ -729,19 +854,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleGridClick(gridItem, element) {
+        setTimeout(() => {
+            if (toolTipItem !== null) {
+                toolTipItem[0].enabled = toolTipItem[1]
+                toolTipItem = null
+            }
+        }, 1);
+        let numbersSize = 0;
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'numbers' && gridItems[i].enabled !== 'empty') {
+                numbersSize += 1
+            }
+        }
         if (gridItem.enabled === false) {
             disabledPiece(gridItem)
             return
         } else if (gridItem.enabled === 'hide' || gridItem.enabled === 'empty') {
             return
         } else if (gridItem.type === 'updown') {
-            updown(gridItem);
+            if (numbersSize >= 1) {
+                updown(gridItem);
+            } else {
+                disabledPiece(gridItem)
+            }
             return
         } else if (gridItem.type === 'reroll') {
-            updateRoll(gridItem)
+            if (reRolls < 5) {
+                updateRoll(gridItem)
+            } else {
+                disabledPiece(gridItem)
+            }
             return
         } else if (gridItem.type === 'rainbow') {
-            updateRainbow(gridItem)
+            if (numbersSize >= 1) {
+                updateRainbow(gridItem)
+            } else {
+                disabledPiece(gridItem)
+            }
             return
         } else if (gridItem.type === 'star' && selectedPieces.length == 0) {
             disabledPiece(gridItem)
@@ -809,7 +958,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedPieceValue === 10) {
             hideSelectedPieces('success');
             playAudio('/SFX/System_Money.ogg');
-            setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
         } else if (selectedPieceValue > 10) {
             hideSelectedPieces('wrong');
             playAudio('/SFX/System_Selected_Error.ogg');
@@ -852,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (mode === 'success') {
+            setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
             updateMoneyDisplay(totalPoints * selectedPieces.length);
             runFireAndRomanUpdates();
         }
@@ -940,9 +1089,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let color = Math.random() < 0.5;
             let animColor;
             if (color) {
-             animColor = ['rgba(255, 172, 172, 0.8)','rgba(184, 78, 78, 0.5)']
+                animColor = ['rgba(255, 172, 172, 0.8)', 'rgba(184, 78, 78, 0.5)']
             } else {
-             animColor = ['rgba(179, 255, 172, 0.8)','rgba(96, 184, 78, 0.5)']
+                animColor = ['rgba(179, 255, 172, 0.8)', 'rgba(96, 184, 78, 0.5)']
             }
             playFlashAnimation(gridItems[index].element, animColor[0], animColor[1])
             gridItems[index].element.classList.add("shake");

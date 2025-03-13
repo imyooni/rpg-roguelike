@@ -214,7 +214,7 @@ newGameVocab.addEventListener('click', function (event) {
     newGameVocab.addEventListener("transitionend", function () {
         newGameVocab.classList.add('hidden')
         startGame()
-        playBGM("bgm003.ogg",0.4)
+        playBGM("bgm001.ogg",0.4)
         scene = 'game'
     }, { once: true });
 });

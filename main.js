@@ -1,6 +1,10 @@
 
 
 import * as pieceData from './assets/Scripts/piecesData.js';
+import * as languageData from './assets/Scripts/languageData.js';
+
+let scene = 'intro';
+let language = 'eng';
 
 let selectedPieceValue = 0;
 let selectedPieces = [];
@@ -15,6 +19,7 @@ let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
 let dayCount = 1;
 let goalPoints = 250;  // Example points, this can be changed
+let effects = [];
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
     "reroll", "colors", "roman", "bomb", "fire",
@@ -28,37 +33,270 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
-let audioContext, bgmSource, gainNode;
 
-async function playBGM() {
+let audioContext;
+let globalGainNode;
+const audioBuffers = new Map(); // Store loaded audio buffers
+let bgmSource = null; // Store current BGM source
+
+async function initAudio(globalVolume = 0.75) {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain(); // Create volume control
-
-        const response = await fetch('./assets/Audio/BGM/bgm002.ogg');
-        const audioData = await response.arrayBuffer();
-        const buffer = await audioContext.decodeAudioData(audioData);
-
-        bgmSource = audioContext.createBufferSource();
-        bgmSource.buffer = buffer;
-        bgmSource.loop = true;
-
-        bgmSource.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        bgmSource.start();
-        gainNode.gain.value = 0.4; // 50% volume
+        globalGainNode = audioContext.createGain();
+        globalGainNode.connect(audioContext.destination);
+        globalGainNode.gain.value = globalVolume; // Default global volume
+    }
+    if (audioContext.state === "suspended") {
+        await audioContext.resume();
     }
 }
 
-document.body.addEventListener("click", playBGM, { once: true });
+// Function to load an audio file into memory
+async function loadAudio(filePath) {
+    if (audioBuffers.has(filePath)) return; // Already loaded
+    await initAudio();
+    try {
+        const response = await fetch(`./assets/Audio/${filePath}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffers.set(filePath, audioBuffer);
+    } catch (error) {
+        console.error("Failed to load audio:", error);
+    }
+}
+
+// Function to play a sound effect with individual volume
+async function playAudio(filePath, volume = 1) {
+    await initAudio();
+    if (!audioBuffers.has(filePath)) {
+        await loadAudio(filePath);
+    }
+    const buffer = audioBuffers.get(filePath);
+    if (!buffer) return;
+    
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+
+    // Create a separate gain node for this sound
+    const soundGainNode = audioContext.createGain();
+    soundGainNode.gain.value = volume; // Set individual volume
+
+    // Connect the source -> individual gain -> global gain -> output
+    source.connect(soundGainNode);
+    soundGainNode.connect(globalGainNode);
+
+    source.start(0);
+}
+
+// Function to play background music (BGM) with volume control
+async function playBGM(song, volume = 0.5) {
+    await loadAudio(`BGM/${song}`); // Load and store buffer
+    const buffer = audioBuffers.get(`BGM/${song}`);
+    if (!buffer) return;
+
+    // Stop any existing BGM
+    if (bgmSource) {
+        bgmSource.stop();
+    }
+
+    // Create new source and gain node for BGM
+    bgmSource = audioContext.createBufferSource();
+    bgmSource.buffer = buffer;
+    bgmSource.loop = true;
+
+    const bgmGainNode = audioContext.createGain();
+    bgmGainNode.gain.value = volume; // Set BGM volume
+
+    // Connect BGM source -> individual BGM gain -> global gain -> output
+    bgmSource.connect(bgmGainNode);
+    bgmGainNode.connect(globalGainNode);
+
+    bgmSource.start();
+}
+
+// Function to set global volume
+function setGlobalVolume(volume) {
+    if (globalGainNode) {
+        globalGainNode.gain.value = volume;
+    }
+}
+
+// Function to stop BGM
+function stopBGM() {
+    if (bgmSource) {
+        bgmSource.stop();
+        bgmSource = null;
+    }
+}
 
 
+// Unlock audio on first user interaction (needed for mobile)
+//document.addEventListener("click", initAudio, { once: true });
+//document.addEventListener("touchstart", initAudio, { once: true });
+//document.body.addEventListener("click", playBGM, { once: true });
+
+function playFlashAnimation(element, color1, color2) {
+    element.style.setProperty('--element-color-start', color1);
+    element.style.setProperty('--element-color-mid', color2);
+    element.classList.add('element-flash');
+    element.addEventListener("animationend", () => {
+        element.classList.remove("element-flash");
+    }, { once: true });
+}
+
+//███████████//
+//   INTRO   //
+//███████████//
 document.addEventListener('DOMContentLoaded', () => {
-    const shopContainer = document.querySelector(".shop-grid");
-    const gridContainer = document.querySelector(".grid-container");
-    const reRollcanvas = document.createElement("canvas");
+    const intro = document.querySelector('.intro-background');
+    if (intro) intro.classList.remove('hidden');
+});
 
+document.addEventListener("click", function () {
+    const logo = document.querySelector('.logo');
+    if (!logo || logo.done) return;
+    logo.classList.remove('hidden');
+    setTimeout(() => {
+        logo.style.opacity = "1";
+    }, 100);
+    logo.addEventListener("transitionend", function () {
+        if (!logo.done) {
+            playAudio('/SFX/System_Intro.ogg');
+            logo.done = true;
+        }
+    }, { once: true });
+});
+
+const gameTitle = document.querySelector('.gameTitle');
+const gameLanguage = document.querySelector('.gameLanguage');
+document.addEventListener("click", function () {
+    const logo = document.querySelector('.logo');
+    const intro = document.querySelector('.intro-background');
+    const secondaryBackground = document.querySelector('.secondary-background');
+    const twitchIcon = document.querySelector('.twitchIcon');
+    const youtubeIcon = document.querySelector('.youtubeIcon');
+    if (scene === 'intro' && logo.done) {
+        setTimeout(() => {
+            logo.style.opacity = "0";
+        }, 100);
+        logo.addEventListener("transitionend", function () {
+            intro.style.opacity = "0";
+            intro.addEventListener("transitionend", function () {
+                intro.remove();
+            }, { once: true });
+
+            setTimeout(() => {
+                gameTitle.style.opacity = "1";
+            }, 100);
+            secondaryBackground.classList.remove('hidden');
+            twitchIcon.classList.remove('hidden');
+            youtubeIcon.classList.remove('hidden');
+            gameTitle.classList.remove('hidden');
+            gameLanguage.classList.remove('hidden');
+            scene = 'title'
+            createNewGame()
+            logo.remove();
+        }, { once: true });
+    }
+});
+
+
+const newGameVocab = document.querySelector('.newGame-vocab');
+newGameVocab.addEventListener('click', function (event) {
+    if (scene !== 'title') return
+    playAudio('/SFX/System_Ok.ogg');
+    playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
+    const elementsToHide = [twitchIcon, youtubeIcon, gameTitle, gameLanguage];
+    elementsToHide.forEach(element => element.classList.add('hidden'));
+    setTimeout(() => {
+        newGameVocab.style.opacity = "0";
+    }, 100);
+    newGameVocab.addEventListener("transitionend", function () {
+        newGameVocab.classList.add('hidden')
+        startGame()
+        playBGM("bgm003.ogg",0.4)
+        scene = 'game'
+    }, { once: true });
+});
+
+
+const twitchIcon = document.querySelector('.twitchIcon');
+twitchIcon.addEventListener('click', function () {
+    playAudio('/SFX/System_Selected_Piece.ogg');
+    window.open('https://www.twitch.tv/Zuljanim', '_blank');
+});
+
+const youtubeIcon = document.querySelector('.youtubeIcon');
+youtubeIcon.addEventListener('click', function () {
+    playAudio('/SFX/System_Selected_Piece.ogg');
+    window.open('https://www.youtube.com/@jooyeonkim1774', '_blank');
+});
+
+const languageIcon = document.querySelector('.gameLanguage');
+languageIcon.addEventListener('click', () => {
+    playAudio('/SFX/System_Selected_Piece.ogg');
+    language = (language === 'eng') ? 'kor' : 'eng';
+    languageIcon.style.backgroundImage = language === 'eng'
+        ? "url('./assets/Sprites/ENG.png')"
+        : "url('./assets/Sprites/KOR.png')";
+    updateNewGameText();
+});
+
+function createNewGame() {
+    if (!newGameVocab) return;
+    newGameVocab.classList.remove('hidden');
+    let newGameText = newGameVocab.querySelector('.newGame-text');
+    if (!newGameText) {
+        newGameText = document.createElement('div');
+        newGameText.classList.add('newGame-text');
+        newGameVocab.appendChild(newGameText);
+    }
+    newGameText.textContent = languageData.vocab(language).newGameVocab;
+}
+
+function updateNewGameText() {
+    const newGameText = document.querySelector('.newGame-text');
+    if (newGameText) {
+        newGameText.textContent = languageData.vocab(language).newGameVocab;
+    }
+}
+
+//███████████//
+//   GAME    //
+//███████████//
+
+const shopContainer = document.querySelector(".shop-grid");
+const gridContainer = document.querySelector(".grid-container");
+const gridBorderImage = document.querySelector(".grid-border-image");
+const reRollcanvas = document.createElement("canvas");
+const goalVocab = document.querySelector('.goal-vocab');
+const endDayVocab = document.querySelector('.endDay-vocab');
+const endayConfirmationVocab = document.querySelector('.endayConfirmation-vocab');
+const endayConfirmationYes = document.querySelector('.endayConfirmation-yes');
+const endayConfirmationNo = document.querySelector('.endayConfirmation-no');
+const dayCountVocab = document.querySelector('.dayCount-vocab');
+const shopBorder = document.querySelector('.shop-border');
+const shopVocab = document.querySelector('.shop-vocab');
+const buyButton = document.querySelector('.buy-button');
+const emptyBorder = document.querySelector('.empty-border');
+const moneyBorder = document.querySelector('.money-border');
+const moneySprite = document.querySelector('.money-sprite');
+const booksBorder = document.querySelector('.books-border');
+const reRollItem = document.querySelector('.reroll-item');
+const pauseBackground = document.querySelector('.pause-background');
+
+
+function showGameElements() {
+    const elementsList = [
+        emptyBorder, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
+        buyButton, gridContainer, gridBorderImage, reRollcanvas, goalVocab, endDayVocab,
+        dayCountVocab, pauseBackground, booksBorder, reRollItem, endayConfirmationVocab,
+        endayConfirmationYes, endayConfirmationNo
+    ];
+    elementsList.forEach(element => element.classList.remove('hidden'));
+
+}
+function startGame() {
     gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
     gridContainer.style.gap = `${spacing}px`;
@@ -66,8 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
     shopContainer.style.gridTemplateColumns = `repeat(${3}, ${cellSize}px)`;
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
-
-
 
     const spritesheets = {
         roll: new Image(),
@@ -111,35 +347,39 @@ document.addEventListener('DOMContentLoaded', () => {
             createReroll();
             createGoal()
             shopVocab()
+            showGameElements()
         });
     }
 
     // 🎮 Load all spritesheets before generating pieces
     loadSpritesheets();
 
-
+    const goalText = document.createElement('div');
+    const pointsText = document.createElement('div');
     function createGoal() {
-        const goalVocab = document.querySelector('.goal-vocab');
-        const goalText = document.createElement('div');
+        
         goalText.classList.add('goal');
-        goalText.textContent = "Goal";  // First word "goal" in gold color
-        const pointsText = document.createElement('div');
+        goalText.textContent = languageData.vocab(language).goal;;  // First word "goal" in gold color
+        
         pointsText.classList.add('points');
         pointsText.textContent = `${goalPoints}`;  // Points required in white color
         goalVocab.appendChild(goalText);
         goalVocab.appendChild(pointsText);
 
-        const endDayVocab = document.querySelector('.endDay-vocab');
+
         const endDayText = document.createElement('div');
         endDayText.classList.add('endDay-text');
-        endDayText.textContent = "End Day";
+        endDayText.textContent = languageData.vocab(language).endDay;
         endDayVocab.appendChild(endDayText);
-
-        const dayCountVocab = document.querySelector('.dayCount-vocab');
         const dayCountText = document.createElement('div');
         dayCountText.classList.add('dayCount-text');
-        dayCountText.textContent = `Day ${dayCount}`;
+        dayCountText.textContent = `${languageData.vocab(language).day} ${dayCount}`;
         dayCountVocab.appendChild(dayCountText);
+    }
+
+    function updateGoalPoints(newPoints) {
+        goalPoints = newPoints;  // Update the variable
+        pointsText.textContent = `${goalPoints}`; // Update the displayed text
     }
 
 
@@ -149,60 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePiece(i, gridContainer, "grid-item", null, true)
         }
     }
-
-
-    let audioContext;
-    const audioBuffers = new Map(); // Store loaded audio buffers
-
-    async function initAudio() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioContext.state === "suspended") {
-            await audioContext.resume();
-        }
-    }
-
-    // Function to load an audio file into memory
-    async function loadAudio(filePath) {
-        if (audioBuffers.has(filePath)) return; // Already loaded
-
-        await initAudio();
-        try {
-            const response = await fetch(`./assets/Audio/${filePath}`);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            audioBuffers.set(filePath, audioBuffer);
-        } catch (error) {
-            console.error("Failed to load audio:", error);
-        }
-    }
-
-    // Function to play an audio file
-    async function playAudio(filePath) {
-        await initAudio();
-
-        // Load audio if it's not already in memory
-        if (!audioBuffers.has(filePath)) {
-            await loadAudio(filePath);
-        }
-
-        const buffer = audioBuffers.get(filePath);
-        if (!buffer) return;
-
-        const source = audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioContext.destination);
-        source.start(0);
-    }
-
-
-
-
-    // Unlock audio on first user interaction (needed for mobile)
-    document.addEventListener("click", initAudio, { once: true });
-    document.addEventListener("touchstart", initAudio, { once: true });
-
 
 
     // Function to add (show) the pause background
@@ -259,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reRollcanvas = document.createElement("canvas");
         }
         reRollButton = document.createElement("div"); // Assign globally
-        reRollButton.classList.add("shuffle-item");
+        reRollButton.classList.add("reroll-item");
 
         Object.assign(reRollButton.style, {
             width: "34px",
@@ -311,11 +497,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         reRollButton.appendChild(reRollcanvas);
 
-        let shuffleContainer = document.querySelector(".shuffle-item");
+        let shuffleContainer = document.querySelector(".reroll-item");
         if (shuffleContainer) {
             shuffleContainer.appendChild(reRollButton);
         } else {
-            console.warn("Warning: .shuffle-item container not found.");
+            console.warn("Warning: .reroll-item container not found.");
         }
     }
 
@@ -328,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let pieceChoice = (fixedType !== "normal" && fixedType !== null) ? "special" : getRandomChoice();
         let id = 0, price, pieceType = 'numbers', enabled = true, points = 1;
-        let spriteKey, randomNumber, value;
+        let spriteKey, randomNumber, value, isBurned = false;
 
         if (pieceChoice === "normal" || fixedType === "normal" || fixedType === "updown_numbers") {
             price = pieceData.Price(0);
@@ -371,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.clearRect(0, 0, cellSize, cellSize);
             ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
 
-            Object.assign(existingItem, { enabled, points, value, price, id, type: pieceType, isSelected: false });
+            Object.assign(existingItem, { enabled, points, value, price, id, type: pieceType, isSelected: false, isBurned: false });
 
             if (classId === "shop-item") {
                 existingItem.enabled = true;
@@ -395,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.appendChild(canvas);
             container.appendChild(cell);
 
-            let pieceDataObj = { element: cell, canvas, id, enabled, points, price, value, type: pieceType, isSelected: false };
+            let pieceDataObj = { element: cell, canvas, id, enabled, points, price, value, type: pieceType, isSelected: false, isBurned: false };
             requestAnimationFrame(() => (canvas.style.opacity = "1"));
 
             piecesList[index] = pieceDataObj;
@@ -514,6 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener("click", function (event) {
         let clickedItem = event.target.closest(".grid-item, .shop-item");
+
 
         if (!clickedItem && event.target.tagName === "CANVAS") {
             clickedItem = event.target.closest(".grid-item, .shop-item");
@@ -678,104 +865,101 @@ document.addEventListener('DOMContentLoaded', () => {
     //█========█// 
     // END DAY //
     //█========█//
-document.addEventListener("click", function (event) {
-    const endDayButton = document.querySelector('.endDay-vocab');
-    if (endDayButton.contains(event.target)) {
-        showPauseBackground(); // Ensure this function is defined
-        playAudio('/SFX/System_Selected_Piece.ogg');
-        let endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
-        endayConfirmVocab.style.visibility = "visible"; // Make it visible
+    document.addEventListener("click", function (event) {
+        const endDayButton = document.querySelector('.endDay-vocab');
+        if (endDayButton.contains(event.target)) {
+            showPauseBackground(); // Ensure this function is defined
+            playAudio('/SFX/System_Selected_Piece.ogg');
+            let endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
+            endayConfirmVocab.style.visibility = "visible"; // Make it visible
 
-        const yesText = document.querySelector('.endayConfirmation-yes');
-        yesText.style.visibility = "visible"; // Make it visible
-        const yesConfirmText = document.createElement('div');
-        yesConfirmText.classList.add('dayCount-text');
-        yesConfirmText.textContent = `Yes`; // Add your custom text here
-        yesText.appendChild(yesConfirmText); // Append the text to the yesText element
+            const yesText = document.querySelector('.endayConfirmation-yes');
+            yesText.style.visibility = "visible"; // Make it visible
+            const yesConfirmText = document.createElement('div');
+            yesConfirmText.classList.add('dayCount-text');
+            yesConfirmText.textContent = `Yes`; // Add your custom text here
+            yesText.appendChild(yesConfirmText); // Append the text to the yesText element
 
-        const noText = document.querySelector('.endayConfirmation-no');
-        noText.style.visibility = "visible"; // Make it visible
-        const noConfirmText = document.createElement('div');
-        noConfirmText.classList.add('dayCount-text');
-        noConfirmText.textContent = `No`; // Add your custom text here
-        noText.appendChild(noConfirmText); // Append the text to the noText element
+            const noText = document.querySelector('.endayConfirmation-no');
+            noText.style.visibility = "visible"; // Make it visible
+            const noConfirmText = document.createElement('div');
+            noConfirmText.classList.add('dayCount-text');
+            noConfirmText.textContent = `No`; // Add your custom text here
+            noText.appendChild(noConfirmText); // Append the text to the noText element
 
-        // Create and append new text
-        const endayConfirmText = document.createElement('div');
-        endayConfirmText.classList.add('dayCount-text');
-        endayConfirmText.textContent = `Finish?`;
-        endayConfirmVocab.appendChild(endayConfirmText);
-    }
-
-    // Check if the "Yes" button was clicked
-    const yesText = document.querySelector('.endayConfirmation-yes');
-    if (yesText.contains(event.target)) {
-        if (reRolls < 5) { 
-            reRolls += 3
-            if (reRolls > 5) {reRolls = 5}
-            playAudio('/SFX/System_ReRoll.ogg');
-            const ctx = reRollcanvas.getContext("2d");
-            ctx.imageSmoothingEnabled = false;
-            updateReRollImage(ctx, reRollcanvas);
-            reRollButton.classList.add("shake");
-            reRollButton.addEventListener("animationend", () => {
-                reRollButton.classList.remove("shake");
-            });
+            // Create and append new text
+            const endayConfirmText = document.createElement('div');
+            endayConfirmText.classList.add('dayCount-text');
+            endayConfirmText.textContent = `Finish?`;
+            endayConfirmVocab.appendChild(endayConfirmText);
         }
-        playAudio('/SFX/System_Money.ogg');
-        updateMoneyDisplay(-goalPoints);
-        hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
+
+        // Check if the "Yes" button was clicked
+        const yesText = document.querySelector('.endayConfirmation-yes');
+        if (yesText.contains(event.target)) {
+            if (reRolls < 5) {
+                reRolls += 3
+                if (reRolls > 5) { reRolls = 5 }
+                playAudio('/SFX/System_ReRoll.ogg');
+                const ctx = reRollcanvas.getContext("2d");
+                ctx.imageSmoothingEnabled = false;
+                updateReRollImage(ctx, reRollcanvas);
+                reRollButton.classList.add("shake");
+                reRollButton.addEventListener("animationend", () => {
+                    reRollButton.classList.remove("shake");
+                });
+            }
+            playAudio('/SFX/System_Money.ogg');
+            updateMoneyDisplay(-goalPoints);
+            updateGoalPoints(goalPoints+50)
+            
+            hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
+        }
+
+        // Check if the "No" button was clicked
+        const noText = document.querySelector('.endayConfirmation-no');
+        if (noText.contains(event.target)) {
+            playAudio('/SFX/System_Cancel.ogg');
+            hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
+        }
+    });
+
+    // Function to hide the confirmation menu
+    function hideconfirmationMenu() {
+        // Hide the confirmation vocab
+        hidePauseBackground(); // Hide the pause background if needed
+        const endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
+        endayConfirmVocab.style.visibility = "hidden"; // Hide the confirmation
+
+        // Hide the yesText and noText elements as well
+        const yesText = document.querySelector('.endayConfirmation-yes');
+        yesText.style.visibility = "hidden"; // Hide the yes option
+        const noText = document.querySelector('.endayConfirmation-no');
+        noText.style.visibility = "hidden"; // Hide the no option
+
+        // Remove the dynamically created text elements from both yes and no
+        const yesConfirmText = yesText.querySelector('.dayCount-text');
+        if (yesConfirmText) {
+            yesConfirmText.remove();
+        }
+
+        const noConfirmText = noText.querySelector('.dayCount-text');
+        if (noConfirmText) {
+            noConfirmText.remove();
+        }
+
+        // Also, remove the "Finish?" text if you want to hide everything
+        const endayConfirmText = endayConfirmVocab.querySelector('.dayCount-text');
+        if (endayConfirmText) {
+            endayConfirmText.remove();
+        }
     }
-
-    // Check if the "No" button was clicked
-    const noText = document.querySelector('.endayConfirmation-no');
-    if (noText.contains(event.target)) {
-        playAudio('/SFX/System_Cancel.ogg');
-        hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
-    }
-});
-
-// Function to hide the confirmation menu
-function hideconfirmationMenu() {
-    // Hide the confirmation vocab
-    hidePauseBackground(); // Hide the pause background if needed
-    const endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
-    endayConfirmVocab.style.visibility = "hidden"; // Hide the confirmation
-
-    // Hide the yesText and noText elements as well
-    const yesText = document.querySelector('.endayConfirmation-yes');
-    yesText.style.visibility = "hidden"; // Hide the yes option
-    const noText = document.querySelector('.endayConfirmation-no');
-    noText.style.visibility = "hidden"; // Hide the no option
-
-    // Remove the dynamically created text elements from both yes and no
-    const yesConfirmText = yesText.querySelector('.dayCount-text');
-    if (yesConfirmText) {
-        yesConfirmText.remove();
-    }
-
-    const noConfirmText = noText.querySelector('.dayCount-text');
-    if (noConfirmText) {
-        noConfirmText.remove();
-    }
-
-    // Also, remove the "Finish?" text if you want to hide everything
-    const endayConfirmText = endayConfirmVocab.querySelector('.dayCount-text');
-    if (endayConfirmText) {
-        endayConfirmText.remove();
-    }
-}
-
-
-
-
-
 
     //█===== 
     // shop //
     function shopVocab() {
         let vocabElement = document.querySelector('.shop-vocab');
-        vocabElement.innerText = "Shop";
+        vocabElement.innerText = languageData.vocab(language).shop;
     }
 
     document.addEventListener("click", function (event) {
@@ -1000,7 +1184,7 @@ function hideconfirmationMenu() {
         }
 
         if (mode === 'success') {
-            setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
+            //  setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
             updateMoneyDisplay(totalPoints * selectedPieces.length);
             runFireAndRomanUpdates();
         }
@@ -1241,14 +1425,6 @@ function hideconfirmationMenu() {
     }
 
 
-    function playFlashAnimation(element, color1, color2) {
-        element.style.setProperty('--piece-color-start', color1);
-        element.style.setProperty('--piece-color-mid', color2);
-        element.classList.add('piece-flash');
-        element.addEventListener("animationend", () => {
-            element.classList.remove("piece-flash");
-        });
-    }
 
     function updateShop(item) {
         item.enabled = 'empty';
@@ -1349,4 +1525,7 @@ function hideconfirmationMenu() {
         }, 150);
     }
 
-});
+}
+
+
+

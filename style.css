@@ -1,17 +1,29 @@
+
+.hidden {
+    display: none;
+    z-index: -1;
+}
+
 body {
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #a1a9af; /* Primary background */
-    overflow: auto; /* Allow scrolling */
-    min-height: 100%; /* Ensure the body is at least the height of the viewport */
-    cursor: url('./assets/Sprites/cursor.png'), auto; /* Set the custom cursor */
+    background: #2F4F4F;
+    /* Primary background */
+    overflow: auto;
+    /* Allow scrolling */
+    min-height: 100%;
+    /* Ensure the body is at least the height of the viewport */
+    cursor: url('./assets/Sprites/cursor.png'), auto;
+    /* Set the custom cursor */
 }
 
 html {
-    height: 100%; /* Ensure HTML element takes full height */
-    overflow: auto; /* Allow scrolling */
+    height: 100%;
+    /* Ensure HTML element takes full height */
+    overflow: auto;
+    /* Allow scrolling */
 }
 
 
@@ -22,6 +34,165 @@ html {
     font-style: normal;
 }
 
+
+.intro-background {
+    width: 100%;
+    height: 100%;
+    background: rgb(175, 160, 73) !important; /* Force black background */
+    display: flex !important; /* Ensure it's displayed */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute; /* Change from relative to absolute */
+    z-index: 0; /* Ensure it's above other elements */
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+.logo {
+    position: absolute;
+    background-image: url('./assets/Sprites/logo.png');
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 362px;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0; /* Start hidden */
+}
+
+.twitchIcon {
+    position: absolute;
+    background-image: url('./assets/Sprites/twitchIcon.png');
+    top: 95%;
+    left: 90%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+}
+
+.youtubeIcon {
+    position: absolute;
+    background-image: url('./assets/Sprites/youtubeIcon.png');
+    top: 95%;
+    left: 75%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+}
+
+.gameLanguage {
+    position: absolute;
+    background-image: url('./assets/Sprites/ENG.png');
+    top: 95%;
+    left: 10%;
+    transform: translate(-50%, -50%);
+    width: 48px;
+    height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+}
+
+.gameTitle {
+    position: absolute;
+    background-image: url('./assets/Sprites/gameTitle.png');
+    top: 18%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 170px;
+    height: 91px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    image-rendering: pixelated;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0; /* Start hidden */
+}
+
+
+/* Styling for the .endDay-vocab container */
+.newGame-vocab {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+    width: 120px;
+    height: 32px;
+    background-color: #a37e18;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+   transition: opacity 0.5s ease-in-out;
+}
+
+.newGame-text {
+    color: rgb(116, 116, 116);
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.newGame-vocab:hover {
+    background-color: #ffde4c;
+}
+
+.newGame-vocab:hover .newGame-text {
+    color: white;
+}
+
+.element-flash {
+    animation: flashAnimation 0.2s ease-in-out;
+}
+
+@keyframes flashAnimation {
+    0% {
+        background-color: var(--element-color-start);
+    }
+    50% {
+        background-color: var(--element-color-mid);
+    }
+    100% {
+        background-color: var(--element-color-start);
+    }
+}
+
+
+
 .secondary-background {
     width: 358px;
     height: 720px;
@@ -31,7 +202,8 @@ html {
     align-items: center;
     justify-content: center;
     border: 1px solid black;
-    position: relative; /* Important to contain absolute children */
+    position: relative;
+    /* Important to contain absolute children */
 }
 
 .pause-background {
@@ -43,8 +215,10 @@ html {
     top: -55%;
     left: 0%;
     z-index: 1000;
-    display: none; /* Hide initially */
-    pointer-events: none; /* Prevent interactions */
+    display: none;
+    /* Hide initially */
+    pointer-events: none;
+    /* Prevent interactions */
 }
 
 
@@ -63,7 +237,8 @@ html {
     top: -54%;
     left: -1px;
     width: 100px;
-    height: 60px; /* Adjusted height to fit both lines */
+    height: 60px;
+    /* Adjusted height to fit both lines */
     background-color: #2b2d42;
     color: rgb(0, 255, 191);
     display: flex;
@@ -89,7 +264,7 @@ html {
     top: -54%;
     right: -1px;
     width: 100px;
-    height: 60px; /* Adjusted height to fit both lines */
+    height: 60px;
     background-color: #2b2d42;
     display: flex;
     flex-direction: column;
@@ -110,15 +285,21 @@ html {
 }
 
 .goal {
-    color: gold; /* Apply gold color to the word "goal" */
-    font-size: 24px; /* Bigger font size for "Goal" */
-    letter-spacing: 1px; /* Optional: Adjust letter spacing to improve readability */
+    color: gold;
+    /* Apply gold color to the word "goal" */
+    font-size: 24px;
+    /* Bigger font size for "Goal" */
+    letter-spacing: 1px;
+    /* Optional: Adjust letter spacing to improve readability */
 }
 
 .points {
-    color: white; /* Apply white color to the points */
-    font-size: 16px; /* Smaller font size for the points */
-    letter-spacing: 0.5px; /* Optional: Adjust letter spacing to improve readability */
+    color: white;
+    /* Apply white color to the points */
+    font-size: 16px;
+    /* Smaller font size for the points */
+    letter-spacing: 0.5px;
+    /* Optional: Adjust letter spacing to improve readability */
 }
 
 /* Styling for the .endDay-vocab container */
@@ -151,31 +332,38 @@ html {
 
 /* Styling for the .endDay-text */
 .endDay-text {
-    color: white;  /* Initial color of text */
+    color: white;
+    /* Initial color of text */
     font-size: 16px;
     letter-spacing: 0.5px;
-    transition: color 0.3s ease;  /* Smooth transition for color change */
+    transition: color 0.3s ease;
+    /* Smooth transition for color change */
 }
 
 /* Hover effect for endDay-vocab */
 .endDay-vocab:hover {
-    opacity: 1.0;  /* Set opacity to 1 on hover */
+    opacity: 1.0;
+    /* Set opacity to 1 on hover */
 }
 
 .endDay-vocab:hover .endDay-text {
-    color: gold;  /* Change text color to gold when hovered */
+    color: gold;
+    /* Change text color to gold when hovered */
 }
 
 
 .endayConfirmation-vocab {
-    position: absolute; /* Fixed position relative to the viewport */
+    position: absolute;
+    /* Fixed position relative to the viewport */
     top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    transform: translate(-50%, -50%);
+    /* Ensures it's always centered */
     width: 100px;
     height: 60px;
     background-color: #2b2d42;
-    visibility: hidden; /* Initially invisible but still occupies space */
+    visibility: hidden;
+    /* Initially invisible but still occupies space */
     color: gold;
     display: flex;
     flex-direction: column;
@@ -196,14 +384,17 @@ html {
 }
 
 .endayConfirmation-yes {
-    position: absolute; /* Fixed position relative to the viewport */
+    position: absolute;
+    /* Fixed position relative to the viewport */
     top: 40%;
     left: 40%;
-    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    transform: translate(-50%, -50%);
+    /* Ensures it's always centered */
     width: 50px;
     height: 30px;
     background-color: #2b2d42;
-    visibility: hidden; /* Initially invisible but still occupies space */
+    visibility: hidden;
+    /* Initially invisible but still occupies space */
     color: greenyellow;
     display: flex;
     flex-direction: column;
@@ -223,14 +414,17 @@ html {
 }
 
 .endayConfirmation-no {
-    position: absolute; /* Fixed position relative to the viewport */
+    position: absolute;
+    /* Fixed position relative to the viewport */
     top: 40%;
     left: 60%;
-    transform: translate(-50%, -50%); /* Ensures it's always centered */
+    transform: translate(-50%, -50%);
+    /* Ensures it's always centered */
     width: 50px;
     height: 30px;
     background-color: #2b2d42;
-    visibility: hidden; /* Initially invisible but still occupies space */
+    visibility: hidden;
+    /* Initially invisible but still occupies space */
     color: red;
     display: flex;
     flex-direction: column;
@@ -249,19 +443,19 @@ html {
         -1px 1px 0px black;
 }
 
-
 .grid-item {
-    width: 36px; 
-    height: 36px; 
+    width: 36px;
+    height: 36px;
     background-color: #708090;
     border: 1px solid black;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    box-sizing: border-box; /* ✅ Fix border issue */
+    box-sizing: border-box;
+    /* ✅ Fix border issue */
     image-rendering: pixelated;
-    z-index: 2; /* Ensure grid items are above shuffle icon */
+    z-index: 2;
 }
 
 /* Highlight selected item with a fading border */
@@ -271,67 +465,94 @@ html {
 
 /* Create the fading border using a pseudo-element */
 .grid-item.selected::before {
-    content: ''; /* Empty content for the pseudo-element */
+    content: '';
+    /* Empty content for the pseudo-element */
     position: absolute;
-    top: -1px; /* Add units (px) */
-    left: -1px; /* Add units (px) */
+    top: -1px;
+    /* Add units (px) */
+    left: -1px;
+    /* Add units (px) */
     width: 100%;
     height: 100%;
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
-    animation: pieces-anim 500ms infinite alternate; /* Fade-in and out effect */
+    animation: pieces-anim 500ms infinite alternate;
+    /* Fade-in and out effect */
 }
 
 @keyframes pieces-anim {
     0% {
-        border-color:#fc2600;
+        border-color: #fc2600;
     }
+
     25% {
-        border-color:#ffffff;
+        border-color: #ffffff;
     }
+
     50% {
-        border-color:#fc2600;
+        border-color: #fc2600;
     }
+
     100% {
-        border-color:#ffffff;
+        border-color: #ffffff;
     }
 }
 
 
 @keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(2px); }
-    50% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-    100% { transform: translateX(0); }
-  }
-  
-  .shake {
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(2px);
+    }
+
+    50% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.shake {
     animation: shake 0.2s ease-in-out;
-  }
-  
+}
+
 
 .grid-container {
     display: grid;
-    padding: 5px; /* Create a 5px gap around the grid */
-    background-color: #2b2d42; /* Border fill color */
-    border-radius: 5px; /* Optional: Adds rounded corners to the grid's border */
-    border: 1px solid black; /* 1px black border around the grid container */
-    margin-bottom: 15px; /* Adds space between grid and money display */
+    padding: 5px;
+    /* Create a 5px gap around the grid */
+    background-color: #2b2d42;
+    /* Border fill color */
+    border-radius: 5px;
+    /* Optional: Adds rounded corners to the grid's border */
+    border: 1px solid black;
+    /* 1px black border around the grid container */
+    margin-bottom: 15px;
+    /* Adds space between grid and money display */
     grid-template-columns: repeat(8, 36px);
     grid-template-rows: repeat(8, 36px);
     gap: 4px;
-    width: calc(8 * 36px + 7 * 4px); /* Width based on grid size + gaps */
+    width: calc(8 * 36px + 7 * 4px);
+    /* Width based on grid size + gaps */
     image-rendering: pixelated;
 }
 
 .grid-border-image {
     position: absolute;
     background-image: url('./assets/Sprites/border.png');
-    bottom: 99.6%; 
+    bottom: 99.6%;
     left: 70%;
-    width: 45px; 
+    width: 45px;
     height: 45px;
     display: flex;
     justify-content: left;
@@ -346,9 +567,9 @@ html {
     background-size: 24px 24px;
     background-repeat: no-repeat;
     background-position: 5px center;
-    bottom: 99.6%; 
+    bottom: 99.6%;
     left: 5.5%;
-    width: 36px; 
+    width: 36px;
     height: 42px;
     background-color: #6441a5;
     display: flex;
@@ -362,9 +583,9 @@ html {
 
 .shop-vocab {
     position: absolute;
-    bottom: -34%; 
+    bottom: -34%;
     left: 35.5%;
-    width: 100px; 
+    width: 100px;
     height: 30px;
     background-color: #2b2d42;
     color: #acd468;
@@ -373,15 +594,17 @@ html {
     align-items: center;
     font-family: 'DefaultFont';
     font-size: 16px;
-    z-index: 0; 
+    z-index: 0;
     border: 1px solid black;
     border-radius: 0 0 10px 10px;
-    pointer-events: none; /* Disable pointer interactions */
-    user-select: none; /* Disable text selection */
-    text-shadow: 
-        1px 1px 0px black,  
-        -1px -1px 0px black,  
-        1px -1px 0px black, 
+    pointer-events: none;
+    /* Disable pointer interactions */
+    user-select: none;
+    /* Disable text selection */
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
         -1px 1px 0px black;
     image-rendering: pixelated;
 }
@@ -389,7 +612,7 @@ html {
 /* Shop Border Styles */
 .shop-border {
     position: absolute;
-    bottom: -25.1%; 
+    bottom: -25.1%;
     left: 50%;
     transform: translateX(-50%);
     width: 150px;
@@ -407,27 +630,28 @@ html {
 /* Shop Grid Inside the Border */
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(3, 36px); 
-    grid-template-rows: repeat(2, 36px); 
+    grid-template-columns: repeat(3, 36px);
+    grid-template-rows: repeat(2, 36px);
     justify-content: center;
     align-items: center;
     text-align: center;
     gap: 4px;
-    width: 100%; 
+    width: 100%;
     height: auto;
 }
 
 /* Shop Item Styles */
 .shop-item {
-    width: 36px; 
-    height: 36px; 
+    width: 36px;
+    height: 36px;
     background-color: #708090;
     border: 1px solid black;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    box-sizing: border-box; /* ✅ Fix border issue */
+    box-sizing: border-box;
+    /* ✅ Fix border issue */
     image-rendering: pixelated;
 }
 
@@ -438,41 +662,46 @@ html {
 
 /* Create the fading border using a pseudo-element */
 .shop-item.selected::before {
-    content: ''; /* Empty content for the pseudo-element */
+    content: '';
+    /* Empty content for the pseudo-element */
     position: absolute;
-    top: -1px; /* Add units (px) */
-    left: -1px; /* Add units (px) */
+    top: -1px;
+    /* Add units (px) */
+    left: -1px;
+    /* Add units (px) */
     width: 100%;
     height: 100%;
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
-    animation: pieces-anim 500ms infinite alternate; /* Fade-in and out effect */
+    animation: pieces-anim 500ms infinite alternate;
+    /* Fade-in and out effect */
 }
 
 .container {
-    position: relative; /* Necessary for absolute positioning */
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.shuffle-item {
+.reroll-item {
     position: absolute;
-    bottom: 85%; 
+    bottom: 85%;
     right: 5.5%;
-    width: 34px; 
+    width: 34px;
     height: 67px;
     display: flex;
     image-rendering: pixelated;
-    z-index: 1; /* Reduced z-index */
+    z-index: 1;
+    /* Reduced z-index */
 }
 
 .money-border {
     position: absolute;
-    bottom: 99.6%; 
+    bottom: 99.6%;
     left: 50%;
-    transform: translateX(-61%); 
+    transform: translateX(-61%);
     width: 200px;
     height: 42px;
     background-color: #333;
@@ -486,15 +715,16 @@ html {
 }
 
 .buy-button {
-    display: none; /* Start hidden by default */
+    display: none;
+    /* Start hidden by default */
     position: absolute;
     background-image: url('./assets/Sprites/buyButton.png');
     background-size: 24px 24px;
     background-repeat: no-repeat;
     background-position: 1px center;
-    bottom: -5%; 
+    bottom: -5%;
     left: 71%;
-    width: 26px; 
+    width: 26px;
     height: 26px;
     background-color: #2b2d42;
     display: flex;
@@ -503,66 +733,105 @@ html {
     border: 1px solid black;
     z-index: 1;
     image-rendering: pixelated;
-    transition: opacity 0.3s ease-in-out; /* Smooth animation */
-    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s ease-in-out;
+    /* Smooth animation */
+    opacity: 0;
+    /* Start invisible */
 }
 
 
 .money-sprite {
-    display: flex; 
-    height: 38px; 
+    display: flex;
+    height: 38px;
     overflow: hidden;
     image-rendering: pixelated;
 }
 
 .money-sprite span {
     display: inline-block;
-    width: 22px; 
+    width: 22px;
     height: 38px;
     align-items: left;
-    background-image: url('./assets/Sprites/money_numbers.png'); 
+    background-image: url('./assets/Sprites/money_numbers.png');
     background-repeat: no-repeat;
 }
 
 @keyframes gold-flash {
-    0% { background-color: rgba(250, 225, 0, 0.8); transform: scale(1); opacity: 1; }
-    50% { background-color: rgba(250, 233, 0, 0.5); transform: scale(1); opacity: 0.7; }
-    100% { background-color: transparent; transform: scale(1.2); opacity: 0; }
+    0% {
+        background-color: rgba(250, 225, 0, 0.8);
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        background-color: rgba(250, 233, 0, 0.5);
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        background-color: transparent;
+        transform: scale(1.2);
+        opacity: 0;
+    }
 }
 
 .grid-item.gold-flash::after {
-    content: ''; 
+    content: '';
     position: absolute;
-    top: 0;  /* Ensures it aligns perfectly with the piece */
-    left: 0; /* Ensures it aligns perfectly with the piece */
+    top: 0;
+    /* Ensures it aligns perfectly with the piece */
+    left: 0;
+    /* Ensures it aligns perfectly with the piece */
     width: 100%;
     height: 100%;
-    border-radius: 5px; /* Optional rounded corners */
-    z-index: 5; /* Ensures it stays behind the piece */
+    border-radius: 5px;
+    /* Optional rounded corners */
+    z-index: 5;
+    /* Ensures it stays behind the piece */
     animation: gold-flash 0.5s ease-in-out;
 }
 
 @keyframes red-flash {
-    0% { background-color: rgba(250, 0, 0, 0.8); transform: scale(1); opacity: 1; }
-    50% { background-color: rgba(250, 0, 0, 0.5); transform: scale(1); opacity: 0.7; }
-    100% { background-color: transparent; transform: scale(1.2); opacity: 0; }
+    0% {
+        background-color: rgba(250, 0, 0, 0.8);
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        background-color: rgba(250, 0, 0, 0.5);
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        background-color: transparent;
+        transform: scale(1.2);
+        opacity: 0;
+    }
 }
 
 .grid-item.red-flash::after {
-    content: ''; 
+    content: '';
     position: absolute;
-    top: 0;  /* Ensures it aligns perfectly with the piece */
-    left: 0; /* Ensures it aligns perfectly with the piece */
+    top: 0;
+    /* Ensures it aligns perfectly with the piece */
+    left: 0;
+    /* Ensures it aligns perfectly with the piece */
     width: 100%;
     height: 100%;
-    border-radius: 5px; /* Optional rounded corners */
-    z-index: 5; /* Ensures it stays behind the piece */
+    border-radius: 5px;
+    /* Optional rounded corners */
+    z-index: 5;
+    /* Ensures it stays behind the piece */
     animation: red-flash 0.5s ease-in-out;
 }
 
 .tooltip-text {
-    display: none; /* Start hidden by default */
-    background-color: #2b2d42; 
+    display: none;
+    /* Start hidden by default */
+    background-color: #2b2d42;
     background-image: url('./assets/Sprites/zuljaCoin.png');
     background-size: 24px 24px;
     background-repeat: no-repeat;
@@ -573,40 +842,61 @@ html {
     padding-left: 34px;
     border-radius: 10px;
     position: absolute;
-    bottom: 120%; 
+    bottom: 120%;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     font-family: 'DefaultFont';
     font-size: 16px;
-    z-index: 10; 
+    z-index: 10;
     border: 1px solid black;
-    pointer-events: none; /* Disable pointer interactions */
-    user-select: none; /* Disable text selection */
-    text-shadow: 
-        1px 1px 0px black,  
-        -1px -1px 0px black,  
-        1px -1px 0px black, 
+    pointer-events: none;
+    /* Disable pointer interactions */
+    user-select: none;
+    /* Disable text selection */
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
         -1px 1px 0px black;
     image-rendering: pixelated;
-    transition: opacity 0.3s ease-in-out; /* Smooth animation */
-    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s ease-in-out;
+    /* Smooth animation */
+    opacity: 0;
+    /* Start invisible */
 }
 
 .tooltip-text.show {
-    display: block; /* Show on click */
-    opacity: 1; /* Make visible */
-    user-select: none; /* Disable text selection */
+    display: block;
+    /* Show on click */
+    opacity: 1;
+    /* Make visible */
+    user-select: none;
+    /* Disable text selection */
 }
 
 @keyframes piece-flash {
-    0% { background-color: var(--piece-color-start, rgba(255, 255, 255, 0.8)); transform: scale(1); opacity: 1; }
-    50% { background-color: var(--piece-color-mid, rgba(255, 255, 255, 0.5)); transform: scale(1); opacity: 0.7; }
-    100% { background-color: transparent; transform: scale(1); opacity: 0; }
+    0% {
+        background-color: var(--piece-color-start, rgba(255, 255, 255, 0.8));
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        background-color: var(--piece-color-mid, rgba(255, 255, 255, 0.5));
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+        opacity: 0;
+    }
 }
 
 .grid-item.piece-flash::after {
-    content: ''; 
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -619,7 +909,7 @@ html {
 
 .tooltip {
     position: absolute;
-    background-color: #2b2d42; 
+    background-color: #2b2d42;
     background-repeat: no-repeat;
     background-position: 5px center;
     color: white;
@@ -630,29 +920,51 @@ html {
     z-index: 1000;
     font-family: 'DefaultFont';
     border: 1px solid black;
-    pointer-events: none; /* Disable pointer interactions */
-    user-select: none; /* Disable text selection */
+    pointer-events: none;
+    /* Disable pointer interactions */
+    user-select: none;
+    /* Disable text selection */
     transform: translateX(-50%);
-    top: -40px; /* Adjust based on positioning */
+    top: -40px;
+    /* Adjust based on positioning */
     left: 50%;
     transition: opacity 0.2s ease-in-out;
     opacity: 0;
-    text-shadow: 
-    1px 1px 0px black,  
-    -1px -1px 0px black,  
-    1px -1px 0px black, 
-    -1px 1px 0px black;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
 }
 
 .tooltip.show {
     opacity: 1;
 }
 
-
-
-
-
-
-
-
-
+.books-border {
+    position: absolute;
+    bottom: -55.3%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0%);
+    width: 152px;
+    height: 45px;
+    background-color: #2b2d42;
+    color: #acd468;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 0;
+    border: 1px solid black;
+    pointer-events: none;
+    /* Disable pointer interactions */
+    user-select: none;
+    /* Disable text selection */
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    image-rendering: pixelated;
+}

@@ -14,16 +14,17 @@ let gridItems = [] //new Array(8*8).fill(null);
 let gridSize = 8;
 let cellSize = 36;
 let spacing = 4;
-let reRolls = 3;
+let reRolls = 2;
 let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
 let dayCount = 1;
+let gamePaused = false;
 let goalPoints = 250;  // Example points, this can be changed
 let effects = [];
 let specialTypesList = [
     "blocked", "star", "bubble", "shop", "zul",
     "reroll", "colors", "roman", "bomb", "fire",
-    "rainbow", "updown"];
+    "rainbow", "updown", "multi", "ice"];
 
 function isMobile() {
     return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -73,7 +74,7 @@ async function playAudio(filePath, volume = 1) {
     }
     const buffer = audioBuffers.get(filePath);
     if (!buffer) return;
-    
+
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
 
@@ -129,12 +130,6 @@ function stopBGM() {
     }
 }
 
-
-// Unlock audio on first user interaction (needed for mobile)
-//document.addEventListener("click", initAudio, { once: true });
-//document.addEventListener("touchstart", initAudio, { once: true });
-//document.body.addEventListener("click", playBGM, { once: true });
-
 function playFlashAnimation(element, color1, color2) {
     element.style.setProperty('--element-color-start', color1);
     element.style.setProperty('--element-color-mid', color2);
@@ -161,7 +156,7 @@ document.addEventListener("click", function () {
     }, 100);
     logo.addEventListener("transitionend", function () {
         if (!logo.done) {
-            playAudio('/SFX/System_Intro.ogg');
+            playAudio('/SFX/System_Intro.ogg', 0.2);
             logo.done = true;
         }
     }, { once: true });
@@ -204,6 +199,7 @@ document.addEventListener("click", function () {
 const newGameVocab = document.querySelector('.newGame-vocab');
 newGameVocab.addEventListener('click', function (event) {
     if (scene !== 'title') return
+    if (scene === 'game') return
     playAudio('/SFX/System_Ok.ogg');
     playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
     const elementsToHide = [twitchIcon, youtubeIcon, gameTitle, gameLanguage];
@@ -211,11 +207,11 @@ newGameVocab.addEventListener('click', function (event) {
     setTimeout(() => {
         newGameVocab.style.opacity = "0";
     }, 100);
+    scene = 'game'
     newGameVocab.addEventListener("transitionend", function () {
         newGameVocab.classList.add('hidden')
         startGame()
-        playBGM("bgm001.ogg",0.4)
-        scene = 'game'
+        playBGM("bgm004.mp3",0.4)
     }, { once: true });
 });
 
@@ -232,15 +228,27 @@ youtubeIcon.addEventListener('click', function () {
     window.open('https://www.youtube.com/@jooyeonkim1774', '_blank');
 });
 
-const languageIcon = document.querySelector('.gameLanguage');
+let languageIcon = document.querySelector('.gameLanguage');
+
+// Add event listener to the language icon
 languageIcon.addEventListener('click', () => {
+    // If opacity is not 1 (meaning the transition is ongoing), return and prevent further clicks
+    if (parseFloat(window.getComputedStyle(languageIcon).opacity) !== 1) return;
     playAudio('/SFX/System_Selected_Piece.ogg');
     language = (language === 'eng') ? 'kor' : 'eng';
-    languageIcon.style.backgroundImage = language === 'eng'
-        ? "url('./assets/Sprites/ENG.png')"
-        : "url('./assets/Sprites/KOR.png')";
+    languageIcon.style.opacity = 0;
+    languageIcon.style.transition = 'background-image 0.2s ease-in-out, opacity 0.2s ease-in-out';
+    setTimeout(() => {
+        languageIcon.style.backgroundImage = language === 'eng'
+            ? "url('./assets/Sprites/ENG.png')"
+            : "url('./assets/Sprites/KOR.png')";
+    }, 50);
+    setTimeout(() => {
+        languageIcon.style.opacity = 1;
+    }, 200);
     updateNewGameText();
 });
+
 
 function createNewGame() {
     if (!newGameVocab) return;
@@ -271,6 +279,7 @@ const gridBorderImage = document.querySelector(".grid-border-image");
 const reRollcanvas = document.createElement("canvas");
 const goalVocab = document.querySelector('.goal-vocab');
 const endDayVocab = document.querySelector('.endDay-vocab');
+const gameTime = document.querySelector('.gameTime');
 const endayConfirmationVocab = document.querySelector('.endayConfirmation-vocab');
 const endayConfirmationYes = document.querySelector('.endayConfirmation-yes');
 const endayConfirmationNo = document.querySelector('.endayConfirmation-no');
@@ -288,7 +297,7 @@ const pauseBackground = document.querySelector('.pause-background');
 
 function showGameElements() {
     const elementsList = [
-        emptyBorder, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
+        gameTime, emptyBorder, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
         buyButton, gridContainer, gridBorderImage, reRollcanvas, goalVocab, endDayVocab,
         dayCountVocab, pauseBackground, booksBorder, reRollItem, endayConfirmationVocab,
         endayConfirmationYes, endayConfirmationNo
@@ -312,6 +321,7 @@ function startGame() {
         roman: new Image(),
         special: new Image(),
         zul: new Image(),
+        bomb: new Image(),
     };
 
     function loadSpritesheets() {
@@ -337,6 +347,10 @@ function startGame() {
                 spritesheets.zul.onload = resolve;
             }),
             new Promise((resolve) => {
+                spritesheets.bomb.src = "./assets/Sprites/bomb.png";
+                spritesheets.bomb.onload = resolve;
+            }),
+            new Promise((resolve) => {
                 spritesheets.roll.src = "./assets/Sprites/reRollButton.png";
                 spritesheets.roll.onload = resolve;
             }),
@@ -354,19 +368,58 @@ function startGame() {
     // 🎮 Load all spritesheets before generating pieces
     loadSpritesheets();
 
+
+
+    let gameTime = 0; // Initialize time in seconds
+    const gameTimeDisplay = document.getElementById('gameTimeDisplay');
+    
+    function updateGameTime() {
+        if (gamePaused) return
+        gameTime++; // Increment time by 1 second
+        const minutes = Math.floor(gameTime / 60); // Get minutes
+        const seconds = gameTime % 60; // Get remaining seconds
+        const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; // Format as MM:SS
+        gameTimeDisplay.textContent = timeFormatted; // Update the display
+    }
+    
+    // Update the time every second
+    setInterval(updateGameTime, 1000);
+
+    // Add an event listener for the "keydown" event
+    document.addEventListener('keydown', function(event) {
+        if (event.key === "8") {
+            playAudio('/SFX/System_Update_Shop.ogg');
+            shopItems.forEach(item => {
+                if (item.isSelected) {
+                    item.element.classList.remove("selected");
+                    item.isSelected = false;
+                    item.element.querySelector(".tooltip-text").classList.remove("show");
+                }
+            });
+            for (let i = 0; i < shopItems.length; i++) {
+                shopItems[i].element.classList.add("shake");
+                shopItems[i].enabled = 'empty';
+                shopItems[i].canvas.style.transition = "opacity 0.5s";
+                shopItems[i].canvas.style.opacity = "0";
+                setTimeout(() => {
+                    generatePiece(i, shopContainer, "shop-item")
+                    shopItems[i].element.classList.remove("shake");
+                    shopItems[i].canvas.style.transition = "opacity 0.5s";
+                    shopItems[i].canvas.style.opacity = "1";
+                }, 500);
+            }
+        }
+    });
+
     const goalText = document.createElement('div');
     const pointsText = document.createElement('div');
     function createGoal() {
-        
         goalText.classList.add('goal');
         goalText.textContent = languageData.vocab(language).goal;;  // First word "goal" in gold color
-        
         pointsText.classList.add('points');
         pointsText.textContent = `${goalPoints}`;  // Points required in white color
         goalVocab.appendChild(goalText);
         goalVocab.appendChild(pointsText);
-
-
         const endDayText = document.createElement('div');
         endDayText.classList.add('endDay-text');
         endDayText.textContent = languageData.vocab(language).endDay;
@@ -382,7 +435,6 @@ function startGame() {
         pointsText.textContent = `${goalPoints}`; // Update the displayed text
     }
 
-
     function generateGridPieces() {
         gridContainer.innerHTML = ""
         for (let i = 0; i < gridSize * gridSize; i++) {
@@ -390,8 +442,6 @@ function startGame() {
         }
     }
 
-
-    // Function to add (show) the pause background
     function showPauseBackground() {
         let pauseBg = document.querySelector('.pause-background');
 
@@ -407,7 +457,6 @@ function startGame() {
         pauseBg.style.pointerEvents = 'auto'; // Block interactions with elements underneath
     }
 
-    // Function to hide the pause background
     function hidePauseBackground() {
         const pauseBg = document.querySelector('.pause-background');
         if (pauseBg) {
@@ -415,8 +464,6 @@ function startGame() {
             pauseBg.style.pointerEvents = 'none'; // Allow interactions again
         }
     }
-
-
 
     function generateShopPieces() {
         shopContainer.innerHTML = "";
@@ -505,22 +552,20 @@ function startGame() {
         }
     }
 
-    function generatePiece(index, container, classId, fixedType = null, reroll = false) {
+    function generatePiece(index, container, classId, fixedType = null, reroll = false, fixedValue = null) {
         let specialValue = (classId === 'shop-item') ? 0.60 : 0.25;
-
         function getRandomChoice() {
             return Math.random() < specialValue ? 'special' : 'normal';
         }
-
         let pieceChoice = (fixedType !== "normal" && fixedType !== null) ? "special" : getRandomChoice();
         let id = 0, price, pieceType = 'numbers', enabled = true, points = 1;
-        let spriteKey, randomNumber, value, isBurned = false;
-
-        if (pieceChoice === "normal" || fixedType === "normal" || fixedType === "updown_numbers") {
-            price = pieceData.Price(0);
+        let spriteKey, randomNumber, value, desc = "", isBurned = false;
+        if (pieceChoice === "normal" || fixedType === "numbers" || fixedType === "updown_numbers") {
             spriteKey = spritesheets.numbers;
             if (fixedType === "updown_numbers") {
                 randomNumber = Math.floor(Math.random() * 9) + 1
+            } else if (fixedValue !== null) {
+                randomNumber = fixedValue
             } else {
                 randomNumber = getRandomNumber();
             }
@@ -532,68 +577,89 @@ function startGame() {
                 [spriteKey, randomNumber, enabled, points] = specialIndex;
                 pieceType = specialPiece;
                 id = specialTypesList.indexOf(specialPiece) + 1;
-                price = pieceData.Price(id);
+                if (fixedValue !== null) {
+                    randomNumber = fixedValue
+                }
+                if (specialPiece === "bomb" && randomNumber === 3) {
+                    enabled = 'hide';
+                }
                 value = randomNumber;
             } else {
-                // Default to normal piece if no special piece is selected
-                price = pieceData.Price(0);
                 spriteKey = spritesheets.numbers;
-                randomNumber = Math.floor(Math.random() * 10) + 1;
+                if (fixedValue !== null) {
+                    randomNumber = fixedValue
+                } else {
+                    randomNumber = Math.floor(Math.random() * 10) + 1;
+                }
                 value = (randomNumber === 10) ? Math.floor(Math.random() * 9) + 1 : randomNumber;
             }
         }
-
-        let spriteX = (randomNumber - 1) * 36;
-        let spriteY = 0;
-        let offsetX = (cellSize - 36) / 2;
-        let offsetY = offsetX;
-
+        if (pieceType === "bomb") {
+            desc = `${pieceType}${randomNumber}`
+        } else {
+            desc = pieceType
+        }
+        price = calculatePrice(pieceData.price(desc), [2, 6], 0.1)
+        let columns = 10;
+        let spriteX = ((randomNumber - 1) % columns) * cellSize;
+        let spriteY = Math.floor((randomNumber - 1) / columns) * cellSize;
         let piecesList = (classId === "grid-item") ? gridItems : shopItems;
         let existingItem = piecesList[index];
-
         if (existingItem) {
-            // Reuse existing canvas, update only necessary properties
             let ctx = existingItem.canvas.getContext("2d");
             ctx.clearRect(0, 0, cellSize, cellSize);
-            ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-
-            Object.assign(existingItem, { enabled, points, value, price, id, type: pieceType, isSelected: false, isBurned: false });
-
+            ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, 0, 0, 36, 36);
+            Object.assign(existingItem, { enabled, points, value, price, id, desc, type: pieceType, isSelected: false, isBurned: false });
             if (classId === "shop-item") {
                 existingItem.enabled = true;
                 let tooltip = existingItem.element.querySelector(".tooltip-text");
-                if (tooltip) tooltip.innerText = `$${existingItem.price}`;
+                if (tooltip) {
+                    if (existingItem.price === 0) {
+                        tooltip.innerText = languageData.vocab(language).free;
+                        tooltip.style.color = '#ffe600'
+                    } else {
+                        tooltip.innerText = `$${existingItem.price}`;
+                    }
+                }
             }
         } else {
-            // Create new element only if one doesn't exist
             const cell = document.createElement("div");
             cell.classList.add(classId);
             Object.assign(cell.style, { width: `${cellSize}px`, height: `${cellSize}px`, position: "relative" });
-
             const canvas = document.createElement("canvas");
             Object.assign(canvas.style, { transition: "opacity 0.5s", opacity: "0" });
             Object.assign(canvas, { width: cellSize, height: cellSize });
-
             const ctx = canvas.getContext("2d");
             ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
-
+            ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, 0, 0, 36, 36);
             cell.appendChild(canvas);
             container.appendChild(cell);
-
-            let pieceDataObj = { element: cell, canvas, id, enabled, points, price, value, type: pieceType, isSelected: false, isBurned: false };
+            let pieceDataObj = { element: cell, canvas, id, desc, enabled, points, price, value, type: pieceType, isSelected: false, isBurned: false };
             requestAnimationFrame(() => (canvas.style.opacity = "1"));
-
             piecesList[index] = pieceDataObj;
-
             if (classId === "shop-item") {
                 pieceDataObj.enabled = true;
                 let tooltip = document.createElement("span");
                 tooltip.classList.add("tooltip-text");
-                tooltip.innerText = `$${pieceDataObj.price}`;
+                if (pieceDataObj.price === 0) {
+                    tooltip.innerText = languageData.vocab(language).free;
+                    tooltip.style.color = '#ffe600'
+                } else {
+                    tooltip.innerText = `$${pieceDataObj.price}`;
+                }
                 cell.appendChild(tooltip);
             }
         }
+    }
+
+    function calculatePrice(price, minMax, probabilityToFree) {
+        let extraValue = Math.random() * (minMax[1] - minMax[0]) + minMax[0];
+        let extraPrice = price * (extraValue / 100);
+        let newPrice = parseInt(price + extraPrice);
+        if (Math.random() < probabilityToFree) {
+            newPrice = 0;
+        }
+        return newPrice;
     }
 
 
@@ -641,12 +707,15 @@ function startGame() {
             if (gridItems[i].type === 'shop') {
                 enabledPieces[5] = false
             }
+            if (gridItems[i].type === 'multi') {
+                enabledPieces[12] = false
+            }
             if (gridItems[i].type === 'reroll') {
                 enabledPieces[6] = false
             }
         }
         const typesWithProbabilities = [
-            { type: "colors", probability: 0.33, enabled: enabledPieces[0] },
+            { type: "colors", probability: 0.27, enabled: enabledPieces[0] },
             { type: "roman", probability: 0.18, enabled: enabledPieces[1] },
             { type: "blocked", probability: 0.07, enabled: enabledPieces[2] },
             { type: "bubble", probability: 0.06, enabled: enabledPieces[3] },
@@ -658,6 +727,8 @@ function startGame() {
             { type: "fire", probability: 0.04, enabled: enabledPieces[9] },
             { type: "rainbow", probability: 0.05, enabled: enabledPieces[10] },
             { type: "updown", probability: 0.03, enabled: enabledPieces[11] },
+            { type: "multi", probability: 0.03, enabled: enabledPieces[12] },
+            { type: "ice", probability: 0.03, enabled: enabledPieces[13] },
         ];
         const totalProbability = typesWithProbabilities.reduce((sum, item) => sum + item.probability, 0);
         if (totalProbability !== 1) {
@@ -688,14 +759,15 @@ function startGame() {
             [spritesheets.special, 5, true, 0], // shuffle
             [spritesheets.colors, Math.floor(Math.random() * 9) + 1, true, 3], // colors 
             [spritesheets.roman, Math.floor(Math.random() * 9) + 1, true, 2], // roman
-            [spritesheets.special, 6, true, 0], // bomb
+            [spritesheets.bomb, Math.floor(Math.random() * 3) + 1, true, 0], // bomb
             [spritesheets.special, 7, 'hide', 0], // fire
             [spritesheets.special, 8, true, 0], // rainbow
             [spritesheets.special, 9, true, 0], // updown
+            [spritesheets.special, 10, true, 0], // multi
+            [spritesheets.special, 11, 'hide', 0], // ice
         ]
         return specialArray[index]
     }
-
 
 
     document.addEventListener("click", function (event) {
@@ -766,12 +838,12 @@ function startGame() {
         let line = "";
         let result = [];
         words.forEach(word => {
-            if ((line + word).length > maxLength) {
-                result.push(line.trim());
-                line = word + " ";
+          if ((line + word).length > maxLength) {
+              result.push(line.trim());
+              line = word + " ";
             } else {
                 line += word + " ";
-            }
+          }
         });
         result.push(line.trim());
         return result.join("\n"); // Use "<br>" if inserting into HTML
@@ -784,12 +856,12 @@ function startGame() {
         let shopItem = shopItems.find(item => item.element === element)
         if (gridItem) {
             if (gridItem.enabled === 'empty') return
-            desc = pieceData.Description(gridItem.id);
+            desc = languageData.pieceDesc(language)[gridItem.desc];
             toolTipItem = [gridItem, gridItem.enabled]
             gridItem.enabled = 'hide';
         } else if (shopItem) {
             if (shopItem.enabled === 'empty') return
-            desc = pieceData.Description(shopItem.id);
+            desc = languageData.pieceDesc(language)[shopItem.desc];
             toolTipItem = [shopItem, shopItem.enabled]
             shopItem.enabled = 'hide';
         }
@@ -803,17 +875,20 @@ function startGame() {
         }
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-        desc = wrapText(desc, 100); // Adjust maxLength as needed
-        tooltip.innerText = desc; // Use innerHTML if using "<br>" instead of "\n"
+        desc = wrapText(desc, 25); 
+        tooltip.innerText = desc; 
         secondaryBackground.appendChild(tooltip);
+
         tooltip.style.position = "absolute";
         tooltip.style.left = "50%";
         tooltip.style.top = "18%";
         tooltip.style.transform = "translate(-50%, -50%)";
-        tooltip.style.whiteSpace = "pre-wrap"; // Ensures \n works properly
+       // tooltip.style.whiteSpace = "pre-wrap";
         setTimeout(() => tooltip.classList.add("show"), 10);
         element.tooltipElement = tooltip;
     }
+    
+    
 
     function hideTooltip() {
         let tooltips = document.querySelectorAll(".tooltip");
@@ -868,6 +943,7 @@ function startGame() {
     document.addEventListener("click", function (event) {
         const endDayButton = document.querySelector('.endDay-vocab');
         if (endDayButton.contains(event.target)) {
+            gamePaused = true
             showPauseBackground(); // Ensure this function is defined
             playAudio('/SFX/System_Selected_Piece.ogg');
             let endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
@@ -877,20 +953,20 @@ function startGame() {
             yesText.style.visibility = "visible"; // Make it visible
             const yesConfirmText = document.createElement('div');
             yesConfirmText.classList.add('dayCount-text');
-            yesConfirmText.textContent = `Yes`; // Add your custom text here
+            yesConfirmText.textContent = languageData.vocab(language).yes; // Add your custom text here
             yesText.appendChild(yesConfirmText); // Append the text to the yesText element
 
             const noText = document.querySelector('.endayConfirmation-no');
             noText.style.visibility = "visible"; // Make it visible
             const noConfirmText = document.createElement('div');
             noConfirmText.classList.add('dayCount-text');
-            noConfirmText.textContent = `No`; // Add your custom text here
+            noConfirmText.textContent = languageData.vocab(language).no; // Add your custom text here
             noText.appendChild(noConfirmText); // Append the text to the noText element
 
             // Create and append new text
             const endayConfirmText = document.createElement('div');
             endayConfirmText.classList.add('dayCount-text');
-            endayConfirmText.textContent = `Finish?`;
+            endayConfirmText.textContent = languageData.vocab(language).finish;
             endayConfirmVocab.appendChild(endayConfirmText);
         }
 
@@ -911,8 +987,8 @@ function startGame() {
             }
             playAudio('/SFX/System_Money.ogg');
             updateMoneyDisplay(-goalPoints);
-            updateGoalPoints(goalPoints+50)
-            
+            updateGoalPoints(goalPoints + 50)
+
             hideconfirmationMenu(); // Call hideconfirmationMenu() to hide the elements
         }
 
@@ -927,6 +1003,7 @@ function startGame() {
     // Function to hide the confirmation menu
     function hideconfirmationMenu() {
         // Hide the confirmation vocab
+        gamePaused = false
         hidePauseBackground(); // Hide the pause background if needed
         const endayConfirmVocab = document.querySelector('.endayConfirmation-vocab');
         endayConfirmVocab.style.visibility = "hidden"; // Hide the confirmation
@@ -955,8 +1032,9 @@ function startGame() {
         }
     }
 
-    //█===== 
-    // shop //
+    //█========█// 
+    // SHOP     //
+    //█========█//
     function shopVocab() {
         let vocabElement = document.querySelector('.shop-vocab');
         vocabElement.innerText = languageData.vocab(language).shop;
@@ -985,6 +1063,7 @@ function startGame() {
                 const randomIndex = emptySpaces[Math.floor(Math.random() * emptySpaces.length)];
                 const shopPiece = shopItems[buyButton.pieceIndex];
                 gridItems[randomIndex].element.classList.add("shake");
+                gridItems[randomIndex].canvas.style.opacity = "1"
                 shopPiece.element.classList.add("shake");
                 shopPiece.canvas.style.transition = "opacity 0.5s";
                 shopPiece.canvas.style.opacity = "0";
@@ -1001,11 +1080,12 @@ function startGame() {
                 tooltip.classList.remove("show");
                 buyButton.style.transition = "opacity 0.3s";
                 buyButton.style.opacity = "0";
+
+                generatePiece(randomIndex, gridContainer, "grid-item", shopPiece.type, false, shopPiece.value)
+                /*
                 let enabled;
-                let spriteX = (shopPiece.value - 1) * 36;
-                let spriteY = 0;
-                let offsetX = (cellSize - 36) / 2;
-                let offsetY = offsetX;
+                let spriteX = ((shopPiece.value - 1) % 10) * cellSize;
+                let spriteY = Math.floor((shopPiece.value - 1) / 10) * cellSize;
                 let existingItem = gridItems[randomIndex];
                 let spriteKey;
                 let pieceData = getSpecialData(shopPiece.id - 1);
@@ -1016,21 +1096,25 @@ function startGame() {
                     spriteKey = pieceData[0];
                     enabled = pieceData[2];
                 }
+              
                 let ctx = existingItem.canvas.getContext("2d");
                 ctx.clearRect(0, 0, cellSize, cellSize);
-                ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, offsetX, offsetY, 36, 36);
+                ctx.drawImage(spriteKey, spriteX, spriteY, 36, 36, 0, 0, 36, 36);
                 Object.assign(existingItem, {
                     enabled: enabled,
                     id: shopPiece.id,
+                    desc: shopPiece.desc,
                     isSelected: false,
+                    isBurned: false,
                     points: shopPiece.points,
                     price: 0,
                     type: shopPiece.type,
-                    value: shopPiece.value
+                    value: 1
                 });
                 gridItems[randomIndex].element.classList.remove("shake");
                 gridItems[randomIndex].canvas.style.transition = "opacity 0.5s";
                 gridItems[randomIndex].canvas.style.opacity = "1";
+                */
                 playAudio('/SFX/System_Update_Shop.ogg');
                 updateMoneyDisplay(-shopItems[buyButton.pieceIndex].price);
             }
@@ -1115,14 +1199,22 @@ function startGame() {
                 selectedPieceValue = 11;
             } else if ((gridItem.type === 'numbers' && colorsList) || (gridItem.type === 'colors' && numbersList)) {
                 selectedPieceValue = 11;
+            } else if (gridItem.type === 'multi') {    
             } else if (gridItem.type === 'zul') {
 
             } else if (gridItem.type === 'colors') {
                 if (selectedPieces.length > 0) {
-                    if (selectedPieces[0].value === gridItem.value) {
-                        selectedPieceValue = 10
-                    } else {
+                    let colors = []
+                    for (let i = 0; i < selectedPieces.length; i++) {
+                        if (selectedPieces[i].enabled === 'empty' || selectedPieces[i].type === null) continue
+                        if (selectedPieces[i].type === 'multi') continue
+                        colors.push(selectedPieces[i].value)
+                    }
+                    const hasDifferentColor = colors.some(c => c !== gridItem.value)
+                    if (hasDifferentColor) {
                         selectedPieceValue = 11
+                    } else if (colors.length > 0) {
+                        selectedPieceValue = 10
                     }
                 }
             } else {
@@ -1164,6 +1256,7 @@ function startGame() {
             item.canvas.style.opacity = "0";
             playFlashAnimation(item.element, colorFlash[0], colorFlash[1]);
             item.element.classList.remove("selected");
+            item.type = null
             item.enabled = 'empty';
 
             if (mode === 'success') {
@@ -1182,19 +1275,44 @@ function startGame() {
             totalPoints += bubbles;
             playAudio('/SFX/System_Bubble_Pop.ogg');
         }
+        let multi = selectedPieces.some(n => n.type === "multi");
+        if (multi) {
+            totalPoints *= 2;
+        }
 
         if (mode === 'success') {
-            //  setTimeout(() => playAudio('/SFX/System_Selected_ok.ogg'), 100); // Add 100ms delay
             updateMoneyDisplay(totalPoints * selectedPieces.length);
-            runFireAndRomanUpdates();
+            updateSpecialPieces();
         }
 
         if (pieceBurned > 0) {
             playAudio('/SFX/System_Fire.ogg');
         }
+
         pieceBurned = 0;
         selectedPieceValue = 0;
         selectedPieces = [];
+    }
+
+    function updateSpecialPieces() {
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'fire' && gridItems[i].enabled !== 'empty') {
+                updateFire(gridItems[i]);
+            }
+        }
+        
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'bomb' && gridItems[i].value === 3 && gridItems[i].enabled !== 'empty') {
+                if (gridItems[i].isBurned) continue
+                updatebomb(i);
+            }
+        }
+        for (let i = 0; i < gridItems.length; i++) {
+            if (gridItems[i].type === 'roman' && gridItems[i].enabled !== 'empty') {
+                if (gridItems[i].isBurned) continue
+                updateRoman(i);
+            }
+        }
     }
 
 
@@ -1300,39 +1418,68 @@ function startGame() {
         }
     }
 
-    function bombExplode(item) {
-        playAudio('/SFX/System_Explosion.ogg');
+    function bombExplode(item, sound = true) {
+        if (sound) {
+            playAudio('/SFX/System_Explosion.ogg');
+        }
         item.enabled = 'empty';
         item.canvas.style.transition = "opacity 0.5s";
         item.canvas.style.opacity = "0";
-        playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)')
-        let centerIndex = gridItems.indexOf(item)
+        playFlashAnimation(item.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+        let centerIndex = gridItems.indexOf(item);
         let centerX = centerIndex % gridSize;
         let centerY = Math.floor(centerIndex / gridSize);
-        for (let dx = -1; dx <= 1; dx++) {
-            for (let dy = -1; dy <= 1; dy++) {
-                let newX = centerX + dx;
-                let newY = centerY + dy;
-                let newIndex = newY * gridSize + newX;
-                if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
-                    let piece = gridItems[newIndex];
-                    if (piece.enabled !== 'empty') {
-                        let destroySelected = selectedPieces.indexOf(piece)
-                        if (destroySelected != -1) {
-                            selectedPieces[destroySelected].element.classList.remove("selected");
-                            selectedPieceValue -= piece.value;
-                            selectedPieces = selectedPieces.filter(item => item !== piece);
-                        }
-                        piece.enabled = 'empty';
-                        piece.canvas.style.transition = "opacity 0.5s";
-                        piece.canvas.style.opacity = "0";
-                        playFlashAnimation(piece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)')
+        if (item.value === 1 || item.value === 3) {
+            // 3x3 explosion (square)
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    let newX = centerX + dx;
+                    let newY = centerY + dy;
+                    if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
+                        explodePiece(gridItems[newY * gridSize + newX]);
                     }
+                }
+            }
+        } else if (item.value === 2) {
+            // Cross explosion ("+" shape)
+            let directions = [
+                { dx: -1, dy: 0 },  // Left
+                { dx: 1, dy: 0 },   // Right
+                { dx: 0, dy: -1 },  // Up
+                { dx: 0, dy: 1 }    // Down
+            ];
+            for (let { dx, dy } of directions) {
+                let newX = centerX;
+                let newY = centerY;
+                while (true) {
+                    newX += dx;
+                    newY += dy;
+                    if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) break; // Stop at border
+                    let piece = gridItems[newY * gridSize + newX];
+                    if (piece.enabled === 'empty') continue; // ignore empty space
+                    explodePiece(piece);
                 }
             }
         }
     }
 
+    function explodePiece(piece) {
+        if (piece.enabled !== 'empty') {
+            if (piece.type === 'bomb') {
+                setTimeout(() => bombExplode(piece, false), 10);
+            }
+            let destroySelected = selectedPieces.indexOf(piece);
+            if (destroySelected !== -1) {
+                selectedPieces[destroySelected].element.classList.remove("selected");
+                selectedPieceValue -= piece.value;
+                selectedPieces = selectedPieces.filter(item => item !== piece);
+            }
+            piece.enabled = 'empty';
+            piece.canvas.style.transition = "opacity 0.5s";
+            piece.canvas.style.opacity = "0";
+            playFlashAnimation(piece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+        }
+    }
 
     let pieceBurned = 0
     function updateFire(item) {
@@ -1351,7 +1498,6 @@ function startGame() {
                 let newX = centerX + dx;
                 let newY = centerY + dy;
                 let newIndex = newY * gridSize + newX;
-
                 if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
                     let piece = gridItems[newIndex];
                     if (piece !== item && piece.enabled !== 'empty' && piece.type !== 'blocked' &&
@@ -1409,22 +1555,17 @@ function startGame() {
         }
     }
 
-
-    function runFireAndRomanUpdates() {
-        for (let i = 0; i < gridItems.length; i++) {
-            if (gridItems[i].type === 'fire' && gridItems[i].enabled !== 'empty') {
-                updateFire(gridItems[i]);
-            }
+    function updatebomb(index) {
+        function getRandomChoice() {
+            return Math.random() < 0.25 ? true : false;
         }
-        for (let i = 0; i < gridItems.length; i++) {
-            if (gridItems[i].type === 'roman' && gridItems[i].enabled !== 'empty') {
-                if (gridItems[i].isBurned) continue
-                updateRoman(i);
-            }
+        let detonateChance = getRandomChoice();
+        if (!detonateChance) return;
+        let item = gridItems[index];
+        if (item.type === 'bomb' && item.value === 3 && !item.isBurned && item.enabled !== 'empty') {
+            bombExplode(item)
         }
     }
-
-
 
     function updateShop(item) {
         item.enabled = 'empty';
@@ -1480,24 +1621,28 @@ function startGame() {
 
     updateMoneyDisplay(0)
     function updateMoneyDisplay(value) {
+        // Ensure target money does not go below 0
         let startMoney = money;
-        let targetMoney = money + value;
+        let targetMoney = Math.max(0, money + value);  // Prevent going below 0
         let duration = 300;
         let steps = 20;
         let stepTime = duration / steps;
         let currentStep = 0;
+
         function animateStep() {
             currentStep++;
             let progress = currentStep / steps;
             let easingProgress = 1 - Math.pow(1 - progress, 3);
             let animatedValue = Math.floor(startMoney + (targetMoney - startMoney) * easingProgress);
             renderMoney(animatedValue);
+
             if (currentStep < steps) {
                 setTimeout(animateStep, stepTime);
             } else {
-                money = targetMoney;
+                money = targetMoney;  // Update the actual money value
             }
         }
+
         animateStep();
     }
 

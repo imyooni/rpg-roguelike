@@ -1,37 +1,22 @@
-export function Price(id) {
-  let prices = [
-    25,
-    0, 
-    75, 
-    35,
-    55,
-    100,
-    60, 
-    30,
-    35,
-    60, 
-    30,
-    55,
-    40
-  ]
-  return prices[id]
+export function price(id) {
+  const prices = {
+      numbers: 20,
+      blocked: 10,
+      star: 75,
+      bubble: 35,
+      shop: 55,
+      zul: 100,
+      reroll: 60,
+      colors: 30,
+      roman: 35,
+      bomb1: 40,
+      bomb2: 65,
+      bomb3: 35,
+      fire: 30,
+      rainbow: 55,
+      updown: 50,
+      multi: 60,
+      ice: 30,
+  };
+  return prices[id];
 }
-
-export function Description(id) {
-    let desc = [
-        "Combine different pieces to reach a total of 10 points.", // normal
-        "A blocked piece that does nothing.", // blocked
-        "This piece can pair with any number to make 10 points.", // star
-        "This piece is destroyed when a nearby piece is destroyed.", // bubble
-        "Refreshes the available pieces in the shop.", // shop
-        `Combine "Zul" pieces to get a special reward.`, // zul
-        "Gain an extra reroll to refresh empty spaces.", // reroll
-        "Match two pieces of the same color to score 10 points.", // colors
-        "These pieces change every turn.", // roman
-        "Destroys all pieces in a 3x3 area.", // bomb
-        "Randomly destroy nearby pieces.", // fire
-        "Transforms certain numbers into colors.", // rainbow
-        "Change number values." // updown
-      ];      
-    return desc[id]
-  }

@@ -38,7 +38,7 @@ html {
 .intro-background {
     width: 100%;
     height: 100%;
-    background: rgb(175, 160, 73) !important; /* Force black background */
+    background: #2F4F4F;
     display: flex !important; /* Ensure it's displayed */
     flex-direction: column;
     align-items: center;
@@ -191,8 +191,6 @@ html {
     }
 }
 
-
-
 .secondary-background {
     width: 358px;
     height: 720px;
@@ -203,7 +201,6 @@ html {
     justify-content: center;
     border: 1px solid black;
     position: relative;
-    /* Important to contain absolute children */
 }
 
 .pause-background {
@@ -216,12 +213,8 @@ html {
     left: 0%;
     z-index: 1000;
     display: none;
-    /* Hide initially */
     pointer-events: none;
-    /* Prevent interactions */
 }
-
-
 
 .container {
     width: 100%;
@@ -232,13 +225,39 @@ html {
 }
 
 
+.gameTime {
+    position: absolute;
+    top: -55%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0%);
+    width: 100px;
+    height: 60px;
+    background-color: #2b2d42;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px 10px 10px 10px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+}
+
 .dayCount-vocab {
     position: absolute;
     top: -54%;
     left: -1px;
     width: 100px;
     height: 60px;
-    /* Adjusted height to fit both lines */
     background-color: #2b2d42;
     color: rgb(0, 255, 191);
     display: flex;
@@ -286,23 +305,16 @@ html {
 
 .goal {
     color: gold;
-    /* Apply gold color to the word "goal" */
     font-size: 24px;
-    /* Bigger font size for "Goal" */
     letter-spacing: 1px;
-    /* Optional: Adjust letter spacing to improve readability */
 }
 
 .points {
     color: white;
-    /* Apply white color to the points */
     font-size: 16px;
-    /* Smaller font size for the points */
     letter-spacing: 0.5px;
-    /* Optional: Adjust letter spacing to improve readability */
 }
 
-/* Styling for the .endDay-vocab container */
 .endDay-vocab {
     position: absolute;
     top: -35%;
@@ -330,47 +342,40 @@ html {
     transition: opacity 0.3s ease, color 0.3s ease;
 }
 
-/* Styling for the .endDay-text */
+
 .endDay-text {
     color: white;
-    /* Initial color of text */
     font-size: 16px;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
-    /* Smooth transition for color change */
 }
 
-/* Hover effect for endDay-vocab */
+
 .endDay-vocab:hover {
     opacity: 1.0;
-    /* Set opacity to 1 on hover */
 }
 
 .endDay-vocab:hover .endDay-text {
     color: gold;
-    /* Change text color to gold when hovered */
 }
 
 
 .endayConfirmation-vocab {
     position: absolute;
-    /* Fixed position relative to the viewport */
     top: 25%;
     left: 50%;
     transform: translate(-50%, -50%);
-    /* Ensures it's always centered */
-    width: 100px;
+    width: 150px;
     height: 60px;
     background-color: #2b2d42;
     visibility: hidden;
-    /* Initially invisible but still occupies space */
     color: gold;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     font-family: 'DefaultFont';
-    font-size: 20px;
+    font-size: 16px;
     z-index: 2000;
     border: 1px solid black;
     border-radius: 10px;
@@ -385,23 +390,20 @@ html {
 
 .endayConfirmation-yes {
     position: absolute;
-    /* Fixed position relative to the viewport */
     top: 40%;
-    left: 40%;
+    left: 35%;
     transform: translate(-50%, -50%);
-    /* Ensures it's always centered */
-    width: 50px;
+    width: 80px;
     height: 30px;
     background-color: #2b2d42;
     visibility: hidden;
-    /* Initially invisible but still occupies space */
     color: greenyellow;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     font-family: 'DefaultFont';
-    font-size: 20px;
+    font-size: 16px;
     z-index: 2000;
     border: 1px solid black;
     border-radius: 10px;
@@ -417,10 +419,10 @@ html {
     position: absolute;
     /* Fixed position relative to the viewport */
     top: 40%;
-    left: 60%;
+    left: 65%;
     transform: translate(-50%, -50%);
     /* Ensures it's always centered */
-    width: 50px;
+    width: 80px;
     height: 30px;
     background-color: #2b2d42;
     visibility: hidden;
@@ -431,7 +433,7 @@ html {
     justify-content: center;
     align-items: center;
     font-family: 'DefaultFont';
-    font-size: 20px;
+    font-size: 16px;
     z-index: 2000;
     border: 1px solid black;
     border-radius: 10px;

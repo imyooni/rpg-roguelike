@@ -26,13 +26,14 @@ export function vocab(language) {
             free: "공짜",
             finish: "다 했어요?",
         }
-    }[language]; // Return correct language object
+    }[language]; 
 }
 
 export function pieceDesc(language) {
     return {
       eng: {
         numbers: "Combine different pieces to reach a total of 10 points.",
+        numbers2: "This piece contains a hidden number.",
         blocked: "A blocked piece that does nothing.",
         star: "This piece can pair with any number to make 10 points.",
         bubble: "This piece is destroyed when a nearby piece is destroyed.",
@@ -47,11 +48,12 @@ export function pieceDesc(language) {
         fire: "Randomly destroy nearby pieces.",
         rainbow: "Transforms certain numbers into colors.",
         updown: "Change number values.",
-        multi: "Multiply the points x2.",
-        ice: "Frost nearby pieces.",
+        multi: "Multiply the points of the current combination in x2.",
+        ice: "Frost nearby pieces and make them unusable.",
       },
       kor: {
         numbers: "조각을 합쳐서 10점을 만들어 보세요.",
+        numbers2: "이 조각에는 숨겨진 숫자가 있습니다.",
         blocked: "아무런 기능이 없는 막힌 조각입니다.",
         star: "이 조각은 어떤 숫자와도 짝을 이루어 10점을 만들 수 있어요.",
         bubble: "근처 조각이 파괴되면 함께 사라집니다.",
@@ -66,8 +68,8 @@ export function pieceDesc(language) {
         fire: "주변 조각을 랜덤으로 파괴합니다.",
         rainbow: "특정 숫자를 색상으로 변환합니다.",
         updown: "숫자 값을 변경합니다.",
-        multi: "Multiply the points x2.",
-        ice: "Frost nearby pieces.",
+        multi: "해당 조합의 점수를 2배로 증가시킵니다.",
+        ice: "주변 조각을 얼려서 사용할 수 없게 만듭니다.",
       }
-    }[language]; // Return correct language object
+    }[language];
   }

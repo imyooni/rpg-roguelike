@@ -1,6 +1,7 @@
 export function price(id) {
   const prices = {
       numbers: 20,
+      numbers: 25,
       blocked: 10,
       star: 75,
       bubble: 35,

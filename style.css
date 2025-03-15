@@ -10,20 +10,14 @@ body {
     justify-content: center;
     align-items: center;
     background: #2F4F4F;
-    /* Primary background */
     overflow: auto;
-    /* Allow scrolling */
     min-height: 100%;
-    /* Ensure the body is at least the height of the viewport */
     cursor: url('./assets/Sprites/cursor.png'), auto;
-    /* Set the custom cursor */
 }
 
 html {
     height: 100%;
-    /* Ensure HTML element takes full height */
     overflow: auto;
-    /* Allow scrolling */
 }
 
 
@@ -39,12 +33,12 @@ html {
     width: 100%;
     height: 100%;
     background: #2F4F4F;
-    display: flex !important; /* Ensure it's displayed */
+    display: flex !important; 
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: absolute; /* Change from relative to absolute */
-    z-index: 0; /* Ensure it's above other elements */
+    position: absolute;
+    z-index: 0; 
 }
 
 .hidden {
@@ -66,7 +60,7 @@ html {
     z-index: 5;
     image-rendering: pixelated;
     transition: opacity 0.5s ease-in-out;
-    opacity: 0; /* Start hidden */
+    opacity: 0;
 }
 
 .twitchIcon {
@@ -128,7 +122,7 @@ html {
     z-index: 5;
     image-rendering: pixelated;
     transition: opacity 0.5s ease-in-out;
-    opacity: 0; /* Start hidden */
+    opacity: 0; 
 }
 
 
@@ -317,7 +311,7 @@ html {
 
 .endDay-vocab {
     position: absolute;
-    top: -35%;
+    top: -50%;
     right: -1px;
     width: 100px;
     height: 32px;
@@ -758,77 +752,6 @@ html {
     background-repeat: no-repeat;
 }
 
-@keyframes gold-flash {
-    0% {
-        background-color: rgba(250, 225, 0, 0.8);
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        background-color: rgba(250, 233, 0, 0.5);
-        transform: scale(1);
-        opacity: 0.7;
-    }
-
-    100% {
-        background-color: transparent;
-        transform: scale(1.2);
-        opacity: 0;
-    }
-}
-
-.grid-item.gold-flash::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    /* Ensures it aligns perfectly with the piece */
-    left: 0;
-    /* Ensures it aligns perfectly with the piece */
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
-    /* Optional rounded corners */
-    z-index: 5;
-    /* Ensures it stays behind the piece */
-    animation: gold-flash 0.5s ease-in-out;
-}
-
-@keyframes red-flash {
-    0% {
-        background-color: rgba(250, 0, 0, 0.8);
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        background-color: rgba(250, 0, 0, 0.5);
-        transform: scale(1);
-        opacity: 0.7;
-    }
-
-    100% {
-        background-color: transparent;
-        transform: scale(1.2);
-        opacity: 0;
-    }
-}
-
-.grid-item.red-flash::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    /* Ensures it aligns perfectly with the piece */
-    left: 0;
-    /* Ensures it aligns perfectly with the piece */
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
-    /* Optional rounded corners */
-    z-index: 5;
-    /* Ensures it stays behind the piece */
-    animation: red-flash 0.5s ease-in-out;
-}
 
 .tooltip-text {
     display: none;
@@ -875,38 +798,6 @@ html {
     /* Make visible */
     user-select: none;
     /* Disable text selection */
-}
-
-@keyframes piece-flash {
-    0% {
-        background-color: var(--piece-color-start, rgba(255, 255, 255, 0.8));
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        background-color: var(--piece-color-mid, rgba(255, 255, 255, 0.5));
-        transform: scale(1);
-        opacity: 0.7;
-    }
-
-    100% {
-        background-color: transparent;
-        transform: scale(1);
-        opacity: 0;
-    }
-}
-
-.grid-item.piece-flash::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
-    z-index: 50;
-    animation: piece-flash 0.2s ease-in-out;
 }
 
 .tooltip {

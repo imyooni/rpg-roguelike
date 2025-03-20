@@ -10,7 +10,7 @@ let selectedPieceValue = 0;
 let selectedPieces = [];
 let shopItems = [];
 let tooltip;
-let gridItems = [] //new Array(8*8).fill(null);
+let gridItems = []
 let gridSize = 8;
 let cellSize = 36;
 let spacing = 4;
@@ -19,7 +19,9 @@ let reRollButton;
 let money = 0; //Math.floor(Math.random() * 9999999);
 let dayCount = 1;
 let gamePaused = false;
-let goalPoints = 250;  // Example points, this can be changed
+let goalPoints = 250;
+let calendar = [2025, 1, 1]
+let week = new Array(31).fill(0)
 let books = []
 let effects = [];
 let specialTypesList = [
@@ -35,11 +37,23 @@ document.addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
+document.addEventListener('dragstart', (event) => {
+    event.preventDefault();
+});
+
+
+function changeHiddenState(elements, mode) {
+    if (mode === "hide") {
+        elements.forEach(element => element.classList.add('hidden'));
+    } else {
+        elements.forEach(element => element.classList.remove('hidden'));
+    }
+}
 
 let audioContext;
 let globalGainNode;
-const audioBuffers = new Map(); // Store loaded audio buffers
-let bgmSource = null; // Store current BGM source
+const audioBuffers = new Map();
+let bgmSource = null;
 
 async function initAudio(globalVolume = 0.75) {
     if (!audioContext) {
@@ -53,7 +67,6 @@ async function initAudio(globalVolume = 0.75) {
     }
 }
 
-// Function to load an audio file into memory
 async function loadAudio(filePath) {
     if (audioBuffers.has(filePath)) return; // Already loaded
     await initAudio();
@@ -67,7 +80,6 @@ async function loadAudio(filePath) {
     }
 }
 
-// Function to play a sound effect with individual volume
 async function playAudio(filePath, volume = 1) {
     await initAudio();
     if (!audioBuffers.has(filePath)) {
@@ -90,7 +102,6 @@ async function playAudio(filePath, volume = 1) {
     source.start(0);
 }
 
-// Function to play background music (BGM) with volume control
 async function playBGM(song, volume = 0.5) {
     await loadAudio(`BGM/${song}`); // Load and store buffer
     const buffer = audioBuffers.get(`BGM/${song}`);
@@ -116,14 +127,12 @@ async function playBGM(song, volume = 0.5) {
     bgmSource.start();
 }
 
-// Function to set global volume
 function setGlobalVolume(volume) {
     if (globalGainNode) {
         globalGainNode.gain.value = volume;
     }
 }
 
-// Function to stop BGM
 function stopBGM() {
     if (bgmSource) {
         bgmSource.stop();
@@ -131,18 +140,9 @@ function stopBGM() {
     }
 }
 
-document.addEventListener("click", async () => {
-    await initAudio();
-    const silentBuffer = audioContext.createBuffer(1, 1, 22050);
-    const silentSource = audioContext.createBufferSource();
-    silentSource.buffer = silentBuffer;
-    silentSource.connect(audioContext.destination);
-    silentSource.start(0);
-}, { once: true }); // Runs only once
-
 function playFlashAnimation(element, color1, color2) {
     element.classList.remove('element-flash');
-    void element.offsetWidth; 
+    void element.offsetWidth;
     element.style.setProperty('--element-color-start', color1);
     element.style.setProperty('--element-color-mid', color2);
     element.classList.add('element-flash');
@@ -151,6 +151,29 @@ function playFlashAnimation(element, color1, color2) {
     }, { once: true });
 }
 
+
+const spritesheets = {
+    dayEffects: new Image(),
+    reRollButton: new Image(),
+    numbers: new Image(),
+    colors: new Image(),
+    roman: new Image(),
+    special: new Image(),
+    zul: new Image(),
+    bomb: new Image(),
+};
+
+function loadSpritesheets() {
+    const spritePromises = Object.keys(spritesheets).map((key) => {
+        return new Promise((resolve) => {
+            spritesheets[key].src = `./assets/Sprites/${key}.png`;
+            spritesheets[key].onload = resolve;
+        });
+    });
+}
+
+// 🎮 Load all spritesheets before generating pieces
+loadSpritesheets();
 
 //███████████//
 //   INTRO   //
@@ -208,27 +231,6 @@ document.addEventListener("click", function () {
     }
 });
 
-
-const newGameVocab = document.querySelector('.newGame-vocab');
-newGameVocab.addEventListener('click', function (event) {
-    if (scene !== 'title') return
-    if (scene === 'game') return
-    playAudio('/SFX/System_Ok.ogg');
-    playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
-    const elementsToHide = [twitchIcon, youtubeIcon, gameTitle, gameLanguage];
-    elementsToHide.forEach(element => element.classList.add('hidden'));
-    setTimeout(() => {
-        newGameVocab.style.opacity = "0";
-    }, 100);
-    scene = 'game'
-    newGameVocab.addEventListener("transitionend", function () {
-        newGameVocab.classList.add('hidden')
-        startGame()
-        playBGM("bgm004.ogg", 0.35)
-    }, { once: true });
-});
-
-
 const twitchIcon = document.querySelector('.twitchIcon');
 twitchIcon.addEventListener('click', function () {
     playAudio('/SFX/System_Selected_Piece.ogg');
@@ -262,6 +264,29 @@ languageIcon.addEventListener('click', () => {
     updateNewGameText();
 });
 
+//███████████████//
+//   NEW GAME    //
+//███████████████//
+
+const newGameVocab = document.querySelector('.newGame-vocab');
+newGameVocab.addEventListener('click', function (event) {
+    if (scene !== 'title') return
+    if (scene === 'game') return
+    playAudio('/SFX/System_Ok.ogg');
+    playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
+    const elementsToHide = [twitchIcon, youtubeIcon, gameTitle, gameLanguage];
+    elementsToHide.forEach(element => element.classList.add('hidden'));
+    setTimeout(() => {
+        newGameVocab.style.opacity = "0";
+    }, 100);
+    scene = 'game'
+    newGameVocab.addEventListener("transitionend", function () {
+        newGameVocab.classList.add('hidden')
+        createWeeks()
+        // startGame()
+        // playBGM("bgm004.ogg", 0.35)
+    }, { once: true });
+});
 
 function createNewGame() {
     if (!newGameVocab) return;
@@ -283,6 +308,306 @@ function updateNewGameText() {
 }
 
 //███████████//
+//   WEEKS   //
+//███████████//
+const weeksContainer = document.querySelector(".weeks-container");
+const currentYear = document.querySelector(".currentYear");
+const currentMonth = document.querySelector(".currentMonth");
+const emptyBorder = document.querySelector('.empty-border');
+const continueVocab = document.querySelector('.continue-vocab');
+const moneyBorder = document.querySelector('.money-border');
+const moneySprite = document.querySelector('.money-sprite');
+const goalVocab = document.querySelector('.goal-vocab');
+const dayDescContainer = document.querySelector('.dayDesc');
+
+
+function createdayDesc(container) {
+   // if (!container) return;
+    let dayDate = week[calendar[2]-1]
+    console.log(dayDate )
+    let iconIndex = 0
+    if (dayDate > 0) {
+     iconIndex = dayDate 
+    } 
+    let dayData = languageData.dayEffects(dayDate, language);
+    // Ensure the container has the right class
+    container.classList.add("dayDesc");
+    container.style.position = "absolute";
+
+    // Check if canvas already exists, else create it
+    let canvas = container.querySelector("canvas");
+    if (!canvas) {
+        canvas = document.createElement("canvas");
+        canvas.width = 24;
+        canvas.height = 24;
+        canvas.style.position = "relative";
+        container.appendChild(canvas);
+    }
+
+    // Draw icon from sprite sheet
+    const ctx = canvas.getContext("2d");
+    const columns = 10;
+    let index = iconIndex
+    let spriteX = (index % columns) * 24;
+    let spriteY = Math.floor(index / columns) * 24;
+    ctx.clearRect(0, 0, 24, 24);
+    ctx.drawImage(spritesheets.dayEffects, spriteX, spriteY, 24, 24, 0, 0, 24, 24);
+
+    // Reuse or create name element
+    let dayName = container.querySelector(".dayDesc-name");
+    if (!dayName) {
+        dayName = document.createElement("div");
+        dayName.classList.add("dayDesc-name");
+        container.appendChild(dayName);
+    }
+    dayName.textContent = dayData[0];
+
+    // Reuse or create description element
+    let dayDesc = container.querySelector(".dayDesc-text");
+    if (!dayDesc) {
+        dayDesc = document.createElement("div");
+        dayDesc.classList.add("dayDesc-text");
+        container.appendChild(dayDesc);
+    }
+    dayDesc.innerHTML = dayData[1];
+}
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === "8") {
+        week[0] = Math.floor(Math.random() * 10) + 1
+        updateEffectIcons(0)
+        createdayDesc(dayDescContainer)
+        playAudio('/SFX/System_Selected_Piece.ogg');
+    }
+});
+
+
+
+function createWeeks() {
+    weeksContainer.style.gridTemplateColumns = `repeat(7, 44px)`;
+    weeksContainer.style.gridTemplateRows = `repeat(5, 56px)`;
+    weeksContainer.style.gap = `1px`;
+    weeksContainer.innerHTML = "";
+    let columns = 10;
+
+    for (let index = 0; index < week.length; index++) {
+        if (Math.random() < 0.30) {
+            week[index] = Math.floor(Math.random() * 11) + 1;
+        }
+    }
+
+    for (let i = 0; i <= 34; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("weeks-item");
+        cell.style.position = "relative";
+
+        if (i < 31) {
+            if (calendar[2] == i + 1) {
+                cell.style.backgroundColor = `#ffd700`;
+            }
+            cell.textContent = i + 1;
+            if (week[i] !== 0) {
+                const border = document.createElement("div");
+                border.classList.add("dayBorder");
+                cell.appendChild(border);
+            }
+            if (week[i] !== 0) {
+                const canvas = document.createElement("canvas");
+                canvas.width = 24;
+                canvas.height = 24;
+                canvas.style.position = "absolute";
+                canvas.style.top = "56%";
+                canvas.style.left = "55%";
+                canvas.style.transform = "translate(-50%, -50%)";
+                cell.appendChild(canvas);
+                const ctx = canvas.getContext("2d");
+
+                let index = week[i];
+                let spriteX = (index % columns) * 24;
+                let spriteY = Math.floor(index / columns) * 24;
+                if (spritesheets.dayEffects.complete) {
+                    ctx.clearRect(0, 0, 24, 24);
+                    ctx.drawImage(spritesheets.dayEffects, spriteX, spriteY, 24, 24, 0, 0, 24, 24);
+                } else {
+                    spritesheets.dayEffects.onload = () => {
+                        ctx.clearRect(0, 0, 24, 24);
+                        ctx.drawImage(spritesheets.dayEffects, spriteX, spriteY, 24, 24, 0, 0, 24, 24);
+                    };
+                }
+            }
+        } else {
+            cell.style.backgroundColor = "#9f8b75";
+        }
+
+        weeksContainer.appendChild(cell);
+    }
+    let containerList = [
+        currentYear, currentMonth, weeksContainer, emptyBorder, moneyBorder,
+        moneySprite, goalVocab, continueVocab, dayDescContainer]
+    changeHiddenState(containerList, "show");
+
+    emptyBorder.style.transform = `translate(-7%, -1075%)`;
+    moneyBorder.style.transform = `translate(-68%, -1075%)`;
+    moneyBorder.style.borderRadius = "0px 10px 10px 0px";
+    emptyBorder.style.borderRadius = "10px 0 0px 10px";
+
+    containerList.forEach(element => {
+        element.style.transition = 'opacity 0.3s ease-out'
+    });
+
+    createContinue();
+    createCalendar();
+    createGoal();
+    updateMoneyDisplay(0);
+    createdayDesc(dayDescContainer)
+
+
+    setTimeout(() => {
+        containerList.forEach(element => {
+            element.style.opacity = "1"
+        });
+        // Fade in all week items
+        document.querySelectorAll(".weeks-item").forEach((item) => {
+            item.style.opacity = "1";
+        });
+    }, 10);
+}
+
+
+function updateEffectIcons(i) {
+    let columns = 10
+    const cell = weeksContainer.children[i];
+    if (!cell) return;
+    let border = cell.querySelector(".dayBorder");
+    if (!border) {
+        border = document.createElement("div");
+        border.classList.add("dayBorder");
+        cell.appendChild(border);
+    }
+    let canvas = cell.querySelector("canvas");
+    if (!canvas) {
+        canvas = document.createElement("canvas");
+        canvas.width = 24;
+        canvas.height = 24;
+        canvas.style.position = "absolute";
+        canvas.style.top = "50%";
+        canvas.style.left = "50%";
+        canvas.style.transform = "translate(-50%, -50%)";
+        cell.appendChild(canvas);
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 24, 24);
+    if (week[i] !== null) {
+        let index = week[i]-1;
+        let spriteX = (index % columns) * 24;
+        let spriteY = Math.floor(index / columns) * 24;
+        ctx.drawImage(spritesheets.dayEffects, spriteX, spriteY, 24, 24, 0, 0, 24, 24);
+    }
+}
+
+
+function createContinue() {
+    const continueText = document.createElement('div');
+    continueText.classList.add('endDay-text');
+    continueText.textContent = languageData.vocab(language).continue;
+    continueVocab.appendChild(continueText);
+}
+
+function createCalendar() {
+    if (!currentYear) return;
+    currentYear.classList.remove('hidden');
+    let currentYearText = currentYear.querySelector('.calendar-text');
+    if (!currentYearText) {
+        currentYearText = document.createElement('div');
+        currentYearText.classList.add('calendar-text');
+        currentYear.appendChild(currentYearText);
+    }
+    if (language === "eng") {
+        currentYearText.textContent = `${calendar[0]}`;
+    } else {
+        currentYearText.textContent = `${calendar[0]}년`;
+    }
+
+
+    if (!currentMonth) return;
+    currentMonth.classList.remove('hidden');
+    let currentMonthText = currentMonth.querySelector('.calendar-text');
+    if (!currentMonthText) {
+        currentMonthText = document.createElement('div');
+        currentMonthText.classList.add('calendar-text');
+        currentMonth.appendChild(currentMonthText);
+    }
+    currentMonthText.textContent = `${languageData.months([calendar[1], calendar[2]], language)}`;
+}
+
+
+
+
+function updateMoneyDisplay(value) {
+    // Ensure target money does not go below 0
+    let startMoney = money;
+    let targetMoney = Math.max(0, money + value);  // Prevent going below 0
+    let duration = 300;
+    let steps = 20;
+    let stepTime = duration / steps;
+    let currentStep = 0;
+
+    function animateStep() {
+        currentStep++;
+        let progress = currentStep / steps;
+        let easingProgress = 1 - Math.pow(1 - progress, 3);
+        let animatedValue = Math.floor(startMoney + (targetMoney - startMoney) * easingProgress);
+        renderMoney(animatedValue);
+
+        if (currentStep < steps) {
+            setTimeout(animateStep, stepTime);
+        } else {
+            money = targetMoney;  // Update the actual money value
+        }
+    }
+
+    animateStep();
+}
+
+function renderMoney(amount) {
+    const moneyDisplay = document.getElementById('money-display');
+    moneyDisplay.innerHTML = '';
+    const numberStr = amount.toString().padStart(7, '0');
+    for (let i = 0; i < numberStr.length; i++) {
+        const digit = numberStr[i];
+        const digitElement = document.createElement('span');
+        const digitWidth = 22;
+        digitElement.style.backgroundPosition = `-${digit * digitWidth}px 0`;
+        moneyDisplay.appendChild(digitElement);
+    }
+}
+
+const goalText = document.createElement('div');
+const pointsText = document.createElement('div');
+function createGoal() {
+    goalText.classList.add('goal');
+    goalText.textContent = languageData.vocab(language).goal;;  // First word "goal" in gold color
+    pointsText.classList.add('points');
+    pointsText.textContent = `$${goalPoints}`;  // Points required in white color
+    goalVocab.appendChild(goalText);
+    goalVocab.appendChild(pointsText);
+    const endDayText = document.createElement('div');
+    endDayText.classList.add('endDay-text');
+    endDayText.textContent = languageData.vocab(language).endDay;
+    endDayVocab.appendChild(endDayText);
+    const dayCountText = document.createElement('div');
+    dayCountText.classList.add('dayCount-text');
+    dayCountText.textContent = `${languageData.vocab(language).day} ${dayCount}`;
+    dayCountVocab.appendChild(dayCountText);
+}
+
+function updateGoalPoints(newPoints) {
+    goalPoints = newPoints;  // Update the variable
+    pointsText.textContent = `$${goalPoints}`; // Update the displayed text
+}
+
+
+//███████████//
 //   GAME    //
 //███████████//
 
@@ -290,7 +615,6 @@ const shopContainer = document.querySelector(".shop-grid");
 const gridContainer = document.querySelector(".grid-container");
 const gridBorderImage = document.querySelector(".grid-border-image");
 const reRollcanvas = document.createElement("canvas");
-//const goalVocab = document.querySelector('.goal-vocab');
 const endDayVocab = document.querySelector('.endDay-vocab');
 const gameTime = document.querySelector('.gameTime');
 const endayConfirmationVocab = document.querySelector('.endayConfirmation-vocab');
@@ -300,9 +624,6 @@ const dayCountVocab = document.querySelector('.dayCount-vocab');
 const shopBorder = document.querySelector('.shop-border');
 const shopVocab = document.querySelector('.shop-vocab');
 const buyButton = document.querySelector('.buy-button');
-const emptyBorder = document.querySelector('.empty-border');
-const moneyBorder = document.querySelector('.money-border');
-const moneySprite = document.querySelector('.money-sprite');
 const booksBorder = document.querySelector('.books-border');
 const reRollItem = document.querySelector('.reroll-item');
 const pauseBackground = document.querySelector('.pause-background');
@@ -372,7 +693,6 @@ function startGame() {
             generateShopPieces();
             generateGridPieces();
             createReroll();
-           createGoal()
             shopVocab()
             showGameElements()
         });
@@ -421,30 +741,6 @@ function startGame() {
             }
         }
     });
-
-    const goalText = document.createElement('div');
-    const pointsText = document.createElement('div');
-    function createGoal() {
-      //  goalText.classList.add('goal');
-      //  goalText.textContent = languageData.vocab(language).goal;;  // First word "goal" in gold color
-     //   pointsText.classList.add('points');
-     //   pointsText.textContent = `${goalPoints}`;  // Points required in white color
-     //   goalVocab.appendChild(goalText);
-     //   goalVocab.appendChild(pointsText);
-        const endDayText = document.createElement('div');
-        endDayText.classList.add('endDay-text');
-        endDayText.textContent = languageData.vocab(language).endDay;
-        endDayVocab.appendChild(endDayText);
-        const dayCountText = document.createElement('div');
-        dayCountText.classList.add('dayCount-text');
-        dayCountText.textContent = `${languageData.vocab(language).day} ${dayCount}`;
-        dayCountVocab.appendChild(dayCountText);
-    }
-
-    function updateGoalPoints(newPoints) {
-        goalPoints = newPoints;  // Update the variable
-        pointsText.textContent = `${goalPoints}`; // Update the displayed text
-    }
 
     function generateGridPieces() {
         gridContainer.innerHTML = ""
@@ -495,7 +791,7 @@ function startGame() {
         let offsetX = 0;
         let offsetY = 0;
         ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
-        ctx.drawImage(spritesheets.roll, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
+        ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
     }
 
     function createReroll() {
@@ -607,7 +903,7 @@ function startGame() {
         }
         if (pieceType === "bomb") {
             desc = `${pieceType}${randomNumber}`
-        } else if (pieceType === "numbers" && randomNumber === 10){   
+        } else if (pieceType === "numbers" && randomNumber === 10) {
             points = 2
             desc = "numbers2"
         } else {
@@ -663,7 +959,7 @@ function startGame() {
                     tooltip.style.color = '#ffe600'
                 } else {
                     tooltip.innerText = `$${pieceDataObj.price}`;
-                    tooltip.style.color = '#acd468' 
+                    tooltip.style.color = '#acd468'
                 }
                 cell.appendChild(tooltip);
             }
@@ -910,8 +1206,6 @@ function startGame() {
         element.tooltipElement = tooltip;
     }
 
-
-
     function hideTooltip() {
         let tooltips = document.querySelectorAll(".tooltip");
         tooltips.forEach(tooltip => tooltip.remove());
@@ -1100,19 +1394,19 @@ function startGame() {
                 tooltip.classList.remove("show");
                 buyButton.style.transition = "opacity 0.3s";
                 buyButton.style.opacity = "0";
-                
+
                 shopPiece.canvas.style.transition = "none";
                 shopPiece.canvas.style.opacity = "0";
                 shopPiece.element.classList.remove("shake", "element-flash");
 
                 let value;
                 if (shopPiece.type === "numbers" && shopPiece.desc === "numbers2") {
-                 value = 10
+                    value = 10
                 } else {
-                 value = shopPiece.value
+                    value = shopPiece.value
                 }
                 generatePiece(randomIndex, gridContainer, "grid-item", shopPiece.type, false, value)
-                
+
                 playAudio('/SFX/System_Update_Shop.ogg');
                 updateMoneyDisplay(-shopItems[buyButton.pieceIndex].price);
             }
@@ -1276,7 +1570,7 @@ function startGame() {
         let multi = selectedPieces.some(n => n.type === "multi");
         let pieceMulti = 1;
         if (multi) {
-         pieceMulti = 2;
+            pieceMulti = 2;
         }
 
         if (mode === 'success') {
@@ -1398,12 +1692,12 @@ function startGame() {
             gridItems[index].canvas.style.transition = "opacity 0.5s";
             gridItems[index].canvas.style.opacity = "0";
             playFlashAnimation(gridItems[index].element, animColor[0], animColor[1])
-                let rainbowSelected = selectedPieces.indexOf(gridItems[index])
-                if (rainbowSelected != -1) {
-                    selectedPieces[rainbowSelected].element.classList.remove("selected");
-                    selectedPieceValue -= gridItems[index].value;
-                    selectedPieces = selectedPieces.filter(item => item !== gridItems[index]);
-                }
+            let rainbowSelected = selectedPieces.indexOf(gridItems[index])
+            if (rainbowSelected != -1) {
+                selectedPieces[rainbowSelected].element.classList.remove("selected");
+                selectedPieceValue -= gridItems[index].value;
+                selectedPieces = selectedPieces.filter(item => item !== gridItems[index]);
+            }
             setTimeout(() => {
                 generatePiece(index, shopContainer, "grid-item", "updown_numbers");
                 gridItems[index].canvas.style.transition = "opacity 0.5s";
@@ -1614,46 +1908,6 @@ function startGame() {
             }
         }
         return bubblesDestroyed;
-    }
-
-    updateMoneyDisplay(0)
-    function updateMoneyDisplay(value) {
-        // Ensure target money does not go below 0
-        let startMoney = money;
-        let targetMoney = Math.max(0, money + value);  // Prevent going below 0
-        let duration = 300;
-        let steps = 20;
-        let stepTime = duration / steps;
-        let currentStep = 0;
-
-        function animateStep() {
-            currentStep++;
-            let progress = currentStep / steps;
-            let easingProgress = 1 - Math.pow(1 - progress, 3);
-            let animatedValue = Math.floor(startMoney + (targetMoney - startMoney) * easingProgress);
-            renderMoney(animatedValue);
-
-            if (currentStep < steps) {
-                setTimeout(animateStep, stepTime);
-            } else {
-                money = targetMoney;  // Update the actual money value
-            }
-        }
-
-        animateStep();
-    }
-
-    function renderMoney(amount) {
-        const moneyDisplay = document.getElementById('money-display');
-        moneyDisplay.innerHTML = '';
-        const numberStr = amount.toString().padStart(7, '0');
-        for (let i = 0; i < numberStr.length; i++) {
-            const digit = numberStr[i];
-            const digitElement = document.createElement('span');
-            const digitWidth = 22;
-            digitElement.style.backgroundPosition = `-${digit * digitWidth}px 0`;
-            moneyDisplay.appendChild(digitElement);
-        }
     }
 
     function disabledPiece(item) {

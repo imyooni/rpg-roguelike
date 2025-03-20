@@ -4,6 +4,7 @@ export function vocab(language) {
             newGameVocab: "New Game",
             optionsVocab: "Options",
             exitVocab: "Exit",
+            continue: "Continue",
             goal: "Goal",
             day: "Day",
             endDay: "End Day",
@@ -17,6 +18,7 @@ export function vocab(language) {
             newGameVocab: "새 게임",
             optionsVocab: "옵션",
             exitVocab: "종료",
+            continue: "계속하기",
             goal: "목표",
             day: "일", 
             endDay: "일 종료", 
@@ -27,6 +29,125 @@ export function vocab(language) {
             finish: "다 했어요?",
         }
     }[language]; 
+}
+
+
+export function dayEffects(index, language) {
+  const effects = [
+    "normalDay",
+    "bookDay",
+    "sickDay",
+    "sunnyDay",
+    "moneyDay",
+    "shuffleDay",
+    "colorDay",
+    "taxesDay",
+    "luckyDay",
+    "rainyDay",
+    "rentDay"
+  ];
+
+  const data = {
+    eng: {
+      normalDay: ["Boring Day", "No special effects today."],
+      bookDay: ["Library", "You can select a new book today."],
+      sickDay: [
+        "Sickness",
+        `You feel sick today, you will lose a&nbsp;<span style="color: red;">-5%</span>&nbsp; of your money.`
+      ],
+      sunnyDay: [
+        "Sunny Day",
+        `You will get a&nbsp;<span style="color: green;">+5%</span>&nbsp; of money today.`
+      ],
+      randomDay: [
+        "Random Day",
+        `Not yet.`
+      ],
+      moneyDay: [
+        "Money In My Pockets",
+        `Your current money increases by&nbsp;<span style="color: green;">+3%</span>&nbsp;.`
+      ],
+      shuffleDay: ["An Extra Chance", "Start the day with an extra re-roll."],
+      colorDay: [
+        "Rubik's Cube",
+        `&nbsp;<span style="color: gold;">Color%</span>&nbsp; pieces are more common today.`
+      ],
+      taxesDay: [
+        "Taxes",
+        `The goal score increases by&nbsp;<span style="color: gold;">+5%</span>&nbsp;.`
+      ],
+      luckyDay: ["Lucky Clover", "You will not lose money from the goal score today."],
+      rainyDay: [
+        "Rainy Day",
+        `You will lose&nbsp;<span style="color: red;">-5%</span>&nbsp; of your money today.`
+      ],
+      rentDay: [
+        "Rent Day",
+        `Your current money decreases by&nbsp;<span style="color: red;">-5%</span>&nbsp; to pay the rent.`
+      ],
+    },
+    kor: {
+      normalDay: ["평범한 날", "오늘은 특별한 효과가 없습니다."],
+      bookDay: ["도서관", "오늘 새 책을 선택할 수 있습니다."],
+      sickDay: [
+        "아픈 날",
+        `오늘 몸이 아픕니다. 돈의&nbsp;<span style="color: red;">-5%</span>&nbsp;를 잃습니다.`
+      ],
+      sunnyDay: [
+        "화창한 날",
+        `오늘 돈을&nbsp;<span style="color: green;">+5%</span>&nbsp; 더 얻을 수 있습니다.`
+      ],
+      randomDay: [
+        "Random Day",
+        `Not yet.`
+      ],
+      moneyDay: [
+        "주머니 속 돈",
+        `현재 돈이&nbsp;<span style="color: green;">+3%</span>&nbsp; 증가합니다.`
+      ],
+      shuffleDay: ["추가 기회", "하루를 추가 재굴림으로 시작합니다."],
+      colorDay: [
+        "루빅스 큐브",
+        `&nbsp;<span style="color: gold;">Color%</span>&nbsp; 조각이 오늘 더 많이 나타납니다.`
+      ],
+      taxesDay: [
+        "세금",
+        `목표 점수가&nbsp;<span style="color: gold;">+5%</span>&nbsp; 증가합니다.`
+      ],
+      luckyDay: ["행운의 클로버", "오늘 목표 점수로 인해 돈을 잃지 않습니다."],
+      rainyDay: [
+        "비 오는 날",
+        `오늘 돈을&nbsp;<span style="color: red;">-5%</span>&nbsp; 잃습니다.`
+      ],
+      rentDay: [
+        "월세 날",
+        `현재 돈이&nbsp;<span style="color: red;">-5%</span>&nbsp; 감소하여 월세를 냅니다.`
+      ],
+    }
+  };
+  if (index < 0 || index >= effects.length) {
+    return null; 
+  }
+  const effectKey = effects[index];
+  return data[language][effectKey]; 
+}
+
+
+
+
+
+export function months(id,language = "eng") {
+  let m;
+  const months = [
+  "Jan","Feb","Mar","Apr","May","Jun",
+  "Jul","Aug","Sept","Oct","Nov","Dec"
+  ]
+  if (language === "eng") {
+   m = `${months[id[0]-1]} ${id[1]}`
+  } else {
+   m = `${id[0]}월 ${id[1]}일`
+  }
+ return m
 }
 
 export function pieceDesc(language) {

@@ -1,4 +1,3 @@
-
 .hidden {
     display: none;
     z-index: -1;
@@ -33,12 +32,12 @@ html {
     width: 100%;
     height: 100%;
     background: #2F4F4F;
-    display: flex !important; 
+    display: flex !important;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: absolute;
-    z-index: 0; 
+    z-index: 0;
 }
 
 .hidden {
@@ -122,7 +121,7 @@ html {
     z-index: 5;
     image-rendering: pixelated;
     transition: opacity 0.5s ease-in-out;
-    opacity: 0; 
+    opacity: 0;
 }
 
 
@@ -151,7 +150,7 @@ html {
         -1px -1px 0px black,
         1px -1px 0px black,
         -1px 1px 0px black;
-   transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .newGame-text {
@@ -169,6 +168,258 @@ html {
     color: white;
 }
 
+
+.weeks-container {
+    display: grid;
+    padding: 5px;
+    background-color: #6c584c;
+    border-radius: 5px;
+    border: 1px solid black;
+    margin-bottom: 15px;
+    grid-template-columns: repeat(7, 46px);
+    grid-template-rows: repeat(5, 56px);
+    gap: 4px;
+    width: calc(8 * 36px + 7 * 4px);
+    z-index: 3;
+    pointer-events: none;
+    user-select: none;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.weeks-item {
+    position: relative;
+    width: 44px;
+    height: 56px;
+    background-color: #ccb99d;
+    border: 1px solid black;
+    color: white;
+    display: flex;
+    justify-content: right;
+    padding-right: 3px;
+    /* Moves text slightly left */
+    text-align: right;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    z-index: 10;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.dayBorder {
+    position: absolute;
+    background-image: url('./assets/Sprites/dayBorder.png');
+    top: 16px;
+    width: 32px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+    image-rendering: pixelated;
+}
+
+.effect-icon {
+    position: absolute;
+    z-index: 50;
+    image-rendering: pixelated;
+}
+
+
+.dayDesc {
+    position: absolute;
+    top: 0%;
+    left: 9%;
+    transform: translate(0%, -550%);
+    width: 340px;
+    height: 80px;
+    background-color: #2b2d42;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    transition: opacity 0.5s ease-out;
+    opacity: 0;
+    display: flex;   /* Enables flexbox */
+    flex-direction: row;  /* Align items in a row */
+    align-items: top; /* Align items vertically */
+    gap: 8px; /* Space between icon and text */
+    image-rendering: pixelated;
+}
+
+.dayDesc canvas {
+    position: relative;
+    color: white;
+    padding-bottom: 45px;
+}
+
+
+.dayDesc-name {
+    position: relative;
+    color: rgb(255, 208, 0);
+    padding-bottom: 45px;
+    font-size: 14px;
+    line-height: 24px; 
+}
+
+.dayDesc-text {
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    padding: 10px; /* Adds spacing inside */
+    width: 90%; /* Prevents overflow */
+    text-align: center; /* Centers text horizontally */
+    word-wrap: break-word; /* Ensures long words wrap */
+    white-space: normal; /* Allows multiple lines */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centers vertically and horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+.currentYear {
+    position: absolute;
+    top: 24%;
+    left: 10%;
+    width: 120px;
+    height: 40px;
+    background-color: #2b2d42;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 1;
+    border: 1px solid black;
+    border-radius: 10px 10px 0 0;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+.currentYear-text {
+    color: rgb(116, 116, 116);
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.currentMonth {
+    position: absolute;
+    top: 24%;
+    left: 45%;
+    width: 120px;
+    height: 40px;
+    background-color: #2b2d42;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 20px;
+    z-index: 1;
+    border: 1px solid black;
+    border-radius: 10px 10px 0 0;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+.calendar-text {
+    color: white;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.continue-vocab {
+    position: absolute;
+    top: -34%;
+    right: -1.2px;
+    width: 100px;
+    height: 32px;
+    background-color: #614b10;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    border-radius: 10px 0 0 10px;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+.continue-text {
+    color: white;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+
+.continue-vocab:hover {
+    opacity: 1.0;
+    background-color: #ffe23b;
+}
+
+.continue-vocab:hover .continue-text {
+    color: gold;
+}
+
 .element-flash {
     animation: flashAnimation 0.2s ease-in-out;
 }
@@ -177,17 +428,19 @@ html {
     0% {
         background-color: var(--element-color-start);
     }
+
     50% {
         background-color: var(--element-color-mid);
     }
+
     100% {
         background-color: var(--element-color-start);
     }
 }
 
 .secondary-background {
-    width: 358px;
-    height: 720px;
+    width: 386px;
+    height: 750px;
     background: #5e5cb9;
     display: flex;
     flex-direction: column;
@@ -198,8 +451,8 @@ html {
 }
 
 .pause-background {
-    width: 358px;
-    height: 721px;
+    width: 386px;
+    height: 750px;
     background: #000000;
     opacity: 0.5;
     position: absolute;
@@ -274,7 +527,8 @@ html {
 
 .goal-vocab {
     position: absolute;
-    top: -54%;
+    top: 0%;
+    transform: translateX(0%) translateY(-850%);
     right: -1px;
     width: 100px;
     height: 60px;
@@ -295,24 +549,24 @@ html {
         -1px -1px 0px black,
         1px -1px 0px black,
         -1px 1px 0px black;
+    transition: opacity 0.5s ease-out;
+    opacity: 0;
 }
 
 .goal {
     color: gold;
     font-size: 24px;
-    letter-spacing: 1px;
 }
 
 .points {
-    color: white;
+    color: #acd468;
     font-size: 16px;
-    letter-spacing: 0.5px;
 }
 
 .endDay-vocab {
     position: absolute;
-    top: -50%;
-    right: -1px;
+    top: -34%;
+    right: -1.2px;
     width: 100px;
     height: 32px;
     background-color: #a31829;
@@ -454,27 +708,23 @@ html {
     z-index: 2;
 }
 
-/* Highlight selected item with a fading border */
+
 .grid-item.selected {
     position: relative;
 }
 
-/* Create the fading border using a pseudo-element */
+
 .grid-item.selected::before {
     content: '';
-    /* Empty content for the pseudo-element */
     position: absolute;
     top: -1px;
-    /* Add units (px) */
     left: -1px;
-    /* Add units (px) */
     width: 100%;
     height: 100%;
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
     animation: pieces-anim 500ms infinite alternate;
-    /* Fade-in and out effect */
 }
 
 @keyframes pieces-anim {
@@ -526,20 +776,14 @@ html {
 .grid-container {
     display: grid;
     padding: 5px;
-    /* Create a 5px gap around the grid */
     background-color: #2b2d42;
-    /* Border fill color */
     border-radius: 5px;
-    /* Optional: Adds rounded corners to the grid's border */
     border: 1px solid black;
-    /* 1px black border around the grid container */
     margin-bottom: 15px;
-    /* Adds space between grid and money display */
     grid-template-columns: repeat(8, 36px);
     grid-template-rows: repeat(8, 36px);
     gap: 4px;
     width: calc(8 * 36px + 7 * 4px);
-    /* Width based on grid size + gaps */
     image-rendering: pixelated;
 }
 
@@ -574,6 +818,8 @@ html {
     border: 1px solid black;
     border-radius: 5px 0 0 0;
     image-rendering: pixelated;
+    transition: opacity 0.5s ease-out;
+    opacity: 0;
 }
 
 
@@ -708,6 +954,8 @@ html {
     align-items: center;
     z-index: 5;
     border: 1px solid black;
+    transition: opacity 0.5s ease-out; /* Remove transition on transform */
+    opacity: 0;
 }
 
 .buy-button {

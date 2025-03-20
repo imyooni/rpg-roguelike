@@ -38,6 +38,7 @@ export function dayEffects(index, language) {
     "bookDay",
     "sickDay",
     "sunnyDay",
+    "randomDay",
     "moneyDay",
     "shuffleDay",
     "colorDay",
@@ -49,42 +50,18 @@ export function dayEffects(index, language) {
 
   const data = {
     eng: {
-      normalDay: ["Boring Day", "No special effects today."],
-      bookDay: ["Library", "You can select a new book today."],
-      sickDay: [
-        "Sickness",
-        `You feel sick today, you will lose a&nbsp;<span style="color: red;">-5%</span>&nbsp; of your money.`
-      ],
-      sunnyDay: [
-        "Sunny Day",
-        `You will get a&nbsp;<span style="color: green;">+5%</span>&nbsp; of money today.`
-      ],
-      randomDay: [
-        "Random Day",
-        `Not yet.`
-      ],
-      moneyDay: [
-        "Money In My Pockets",
-        `Your current money increases by&nbsp;<span style="color: green;">+3%</span>&nbsp;.`
-      ],
-      shuffleDay: ["An Extra Chance", "Start the day with an extra re-roll."],
-      colorDay: [
-        "Rubik's Cube",
-        `&nbsp;<span style="color: gold;">Color%</span>&nbsp; pieces are more common today.`
-      ],
-      taxesDay: [
-        "Taxes",
-        `The goal score increases by&nbsp;<span style="color: gold;">+5%</span>&nbsp;.`
-      ],
-      luckyDay: ["Lucky Clover", "You will not lose money from the goal score today."],
-      rainyDay: [
-        "Rainy Day",
-        `You will lose&nbsp;<span style="color: red;">-5%</span>&nbsp; of your money today.`
-      ],
-      rentDay: [
-        "Rent Day",
-        `Your current money decreases by&nbsp;<span style="color: red;">-5%</span>&nbsp; to pay the rent.`
-      ],
+      normalDay: [0,"Boring Day",`No special effects today.`],
+      bookDay: [1,"Library",`You can select a new book today.`],
+      sickDay: [2,"Sickness",`You will lose&nbsp;<span style="color: red;">-5%</span>&nbsp;of your money.`],
+      sunnyDay: [3,"Sunny Day",`You will get&nbsp;<span style="color: GreenYellow;">+5%</span>&nbsp;extra money today.`],
+      randomDay: [4,"Random Day",`Not yet.`],
+      moneyDay: [5,"Money In My Pockets",`Your current money increases by&nbsp;<span style="color: Gold;">+3%</span>&nbsp;.`],
+      shuffleDay: [6,"An Extra Chance", "Start the day with an extra re-roll."],
+      colorDay: [7,"Rubik's Cube", `&nbsp;<span style="color: gold;">Color</span>&nbsp;pieces are more common today.`],
+      taxesDay: [8,"Taxes",`The goal score increases by&nbsp;<span style="color: gold;">+5%</span>&nbsp;`],
+      luckyDay: [9,"Lucky Clover", "You will not lose money from the goal score today."],
+      rainyDay: [10,"Rainy Day",`You will get&nbsp;<span style="color: red;">-5%</span>&nbsp;money today.`],
+      rentDay: [11,"Rent Day", `Your current money decreases by&nbsp;<span style="color: red;">-5%</span>&nbsp;to pay the rent.`],
     },
     kor: {
       normalDay: ["평범한 날", "오늘은 특별한 효과가 없습니다."],

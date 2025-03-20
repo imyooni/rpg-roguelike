@@ -124,8 +124,6 @@ html {
     opacity: 0;
 }
 
-
-/* Styling for the .endDay-vocab container */
 .newGame-vocab {
     position: absolute;
     top: 50%;
@@ -170,6 +168,8 @@ html {
 
 
 .weeks-container {
+    position: absolute;
+    transform: translateY(0%);
     display: grid;
     padding: 5px;
     background-color: #6c584c;
@@ -238,9 +238,8 @@ html {
 
 .dayDesc {
     position: absolute;
-    top: 0%;
-    left: 9%;
-    transform: translate(0%, -550%);
+    transform: translateX(0%);
+    top: 11%;
     width: 340px;
     height: 80px;
     background-color: #2b2d42;
@@ -293,7 +292,7 @@ html {
     text-align: center; /* Centers text horizontally */
     word-wrap: break-word; /* Ensures long words wrap */
     white-space: normal; /* Allows multiple lines */
-    top: 50%;
+    top: 65%;
     left: 50%;
     transform: translate(-50%, -50%); /* Centers vertically and horizontally */
     display: flex;
@@ -305,7 +304,7 @@ html {
 
 .currentYear {
     position: absolute;
-    top: 24%;
+    top: 23.9%;
     left: 10%;
     width: 120px;
     height: 40px;
@@ -341,7 +340,7 @@ html {
 
 .currentMonth {
     position: absolute;
-    top: 24%;
+    top: 23.9%;
     left: 45%;
     width: 120px;
     height: 40px;
@@ -375,10 +374,38 @@ html {
     transition: color 0.3s ease;
 }
 
-.continue-vocab {
+.books-border {
     position: absolute;
-    top: -34%;
-    right: -1.2px;
+    width: 152px;
+    height: 45px;
+    left: 30%;
+    top: 93.8%;
+    background-color: #2b2d42;
+    color: #acd468;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'DefaultFont';
+    font-size: 16px;
+    z-index: 100;
+    border: 1px solid black;
+    pointer-events: none;
+    user-select: none;
+    text-shadow:
+        1px 1px 0px black,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px 1px 0px black;
+    image-rendering: pixelated;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+.continue-vocab {
+    position: relative;
+    left: 38%;
+    top: 24%;
     width: 100px;
     height: 32px;
     background-color: #614b10;
@@ -448,38 +475,29 @@ html {
     justify-content: center;
     border: 1px solid black;
     position: relative;
+    overflow: hidden;
 }
 
 .pause-background {
     width: 386px;
     height: 750px;
-    background: #000000;
+    background: #0000003f;
     opacity: 0.5;
     position: absolute;
-    top: -55%;
+    top: 0%;
     left: 0%;
     z-index: 1000;
     display: none;
     pointer-events: none;
 }
 
-.container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-
 .gameTime {
     position: absolute;
-    top: -55%;
-    left: 50%;
-    transform: translateX(-50%) translateY(0%);
+    top: 19.5%;
+    transform: translateX(0%);
     width: 100px;
     height: 60px;
-    background-color: #2b2d42;
+    background-color: #6c584c;
     color: white;
     display: flex;
     flex-direction: column;
@@ -487,9 +505,9 @@ html {
     align-items: center;
     font-family: 'DefaultFont';
     font-size: 20px;
-    z-index: 100;
+    z-index: 0;
     border: 1px solid black;
-    border-radius: 10px 10px 10px 10px;
+    border-radius: 10px 10px 0px 0px;
     pointer-events: none;
     user-select: none;
     text-shadow:
@@ -500,9 +518,9 @@ html {
 }
 
 .dayCount-vocab {
-    position: absolute;
-    top: -54%;
-    left: -1px;
+    position: relative;
+    top: 50%;
+    left: 0%;
     width: 100px;
     height: 60px;
     background-color: #2b2d42;
@@ -527,8 +545,7 @@ html {
 
 .goal-vocab {
     position: absolute;
-    top: 0%;
-    transform: translateX(0%) translateY(-850%);
+    top: 0.9%;
     right: -1px;
     width: 100px;
     height: 60px;
@@ -565,12 +582,11 @@ html {
 
 .endDay-vocab {
     position: absolute;
-    top: -34%;
+    top: 11%;
     right: -1.2px;
     width: 100px;
     height: 32px;
-    background-color: #a31829;
-    color: #ffffff;
+    background-color: #4d1118;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -592,7 +608,7 @@ html {
 
 
 .endDay-text {
-    color: white;
+    color: #8d8d8d;
     font-size: 16px;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
@@ -600,6 +616,7 @@ html {
 
 
 .endDay-vocab:hover {
+    background-color: #a31829;
     opacity: 1.0;
 }
 
@@ -774,6 +791,8 @@ html {
 
 
 .grid-container {
+    position: absolute;
+    transform: translateX(0%) translateY(0%);
     display: grid;
     padding: 5px;
     background-color: #2b2d42;
@@ -783,50 +802,15 @@ html {
     grid-template-columns: repeat(8, 36px);
     grid-template-rows: repeat(8, 36px);
     gap: 4px;
+    z-index: 2;
     width: calc(8 * 36px + 7 * 4px);
     image-rendering: pixelated;
 }
 
-.grid-border-image {
-    position: absolute;
-    background-image: url('./assets/Sprites/border.png');
-    bottom: 99.6%;
-    left: 70%;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    justify-content: left;
-    align-items: left;
-    image-rendering: pixelated;
-    z-index: 5;
-}
-
-.empty-border {
-    position: absolute;
-    background-image: url('./assets/Sprites/zuljaCoin.png');
-    background-size: 24px 24px;
-    background-repeat: no-repeat;
-    background-position: 5px center;
-    bottom: 99.6%;
-    left: 5.5%;
-    width: 36px;
-    height: 42px;
-    background-color: #6441a5;
-    display: flex;
-    justify-content: left;
-    align-items: left;
-    border: 1px solid black;
-    border-radius: 5px 0 0 0;
-    image-rendering: pixelated;
-    transition: opacity 0.5s ease-out;
-    opacity: 0;
-}
-
-
 .shop-vocab {
     position: absolute;
-    bottom: -34%;
-    left: 35.5%;
+    bottom: 12%;
+    transform: translateX(0%);
     width: 100px;
     height: 30px;
     background-color: #2b2d42;
@@ -840,9 +824,7 @@ html {
     border: 1px solid black;
     border-radius: 0 0 10px 10px;
     pointer-events: none;
-    /* Disable pointer interactions */
     user-select: none;
-    /* Disable text selection */
     text-shadow:
         1px 1px 0px black,
         -1px -1px 0px black,
@@ -851,12 +833,10 @@ html {
     image-rendering: pixelated;
 }
 
-/* Shop Border Styles */
 .shop-border {
     position: absolute;
-    bottom: -25.1%;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 16%;
+    transform: translateX(0%);
     width: 150px;
     height: 100px;
     background-color: #6c584c;
@@ -865,11 +845,10 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10;
+    z-index: 3;
     border: 1px solid black;
 }
 
-/* Shop Grid Inside the Border */
 .shop-grid {
     display: grid;
     grid-template-columns: repeat(3, 36px);
@@ -882,7 +861,6 @@ html {
     height: auto;
 }
 
-/* Shop Item Styles */
 .shop-item {
     width: 36px;
     height: 36px;
@@ -893,43 +871,29 @@ html {
     align-items: center;
     text-align: center;
     box-sizing: border-box;
-    /* ✅ Fix border issue */
     image-rendering: pixelated;
 }
 
-/* Highlight selected item with a fading border */
 .shop-item.selected {
     position: relative;
 }
 
-/* Create the fading border using a pseudo-element */
 .shop-item.selected::before {
     content: '';
-    /* Empty content for the pseudo-element */
     position: absolute;
     top: -1px;
-    /* Add units (px) */
     left: -1px;
-    /* Add units (px) */
     width: 100%;
     height: 100%;
     border: 1px solid transparent;
     border-radius: 1px;
     background-color: transparent;
     animation: pieces-anim 500ms infinite alternate;
-    /* Fade-in and out effect */
-}
-
-.container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .reroll-item {
     position: absolute;
-    bottom: 85%;
+    top: 16%;
     right: 5.5%;
     width: 34px;
     height: 67px;
@@ -941,13 +905,17 @@ html {
 
 .money-border {
     position: absolute;
-    bottom: 99.6%;
-    left: 50%;
-    transform: translateX(-61%);
+    background-image: url('./assets/Sprites/zuljaCoin.png');
+    background-size: 24px 24px;
+    background-repeat: no-repeat;
+    background-position: 5px center;
+    padding-left: 32px;
+    top: 1.2%;
+    left: -1px;
     width: 200px;
     height: 42px;
-    background-color: #333;
-    border-radius: 0 5px 0 0;
+    background-color: #123d09;
+    border-radius: 0 5px 5px 0;
     text-align: center;
     display: flex;
     justify-content: left;
@@ -956,31 +924,6 @@ html {
     border: 1px solid black;
     transition: opacity 0.5s ease-out; /* Remove transition on transform */
     opacity: 0;
-}
-
-.buy-button {
-    display: none;
-    /* Start hidden by default */
-    position: absolute;
-    background-image: url('./assets/Sprites/buyButton.png');
-    background-size: 24px 24px;
-    background-repeat: no-repeat;
-    background-position: 1px center;
-    bottom: -5%;
-    left: 71%;
-    width: 26px;
-    height: 26px;
-    background-color: #2b2d42;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid black;
-    z-index: 1;
-    image-rendering: pixelated;
-    transition: opacity 0.3s ease-in-out;
-    /* Smooth animation */
-    opacity: 0;
-    /* Start invisible */
 }
 
 
@@ -998,6 +941,28 @@ html {
     align-items: left;
     background-image: url('./assets/Sprites/money_numbers.png');
     background-repeat: no-repeat;
+}
+
+.buy-button {
+    display: none;
+    position: absolute;
+    background-image: url('./assets/Sprites/buyButton.png');
+    background-size: 24px 24px;
+    background-repeat: no-repeat;
+    background-position: 1px center;
+    bottom: -5%;
+    left: 71%;
+    width: 26px;
+    height: 26px;
+    background-color: #2b2d42;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+    z-index: 1;
+    image-rendering: pixelated;
+    transition: opacity 0.3s ease-in-out;
+    opacity: 0;
 }
 
 
@@ -1080,32 +1045,4 @@ html {
 
 .tooltip.show {
     opacity: 1;
-}
-
-.books-border {
-    position: absolute;
-    bottom: -55.3%;
-    left: 50%;
-    transform: translateX(-50%) translateY(0%);
-    width: 152px;
-    height: 45px;
-    background-color: #2b2d42;
-    color: #acd468;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: 'DefaultFont';
-    font-size: 16px;
-    z-index: 0;
-    border: 1px solid black;
-    pointer-events: none;
-    /* Disable pointer interactions */
-    user-select: none;
-    /* Disable text selection */
-    text-shadow:
-        1px 1px 0px black,
-        -1px -1px 0px black,
-        1px -1px 0px black,
-        -1px 1px 0px black;
-    image-rendering: pixelated;
 }

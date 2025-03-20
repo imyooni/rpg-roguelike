@@ -21,7 +21,7 @@ let dayCount = 1;
 let gamePaused = false;
 let goalPoints = 250;
 let calendar = [2025, 1, 1]
-let week = new Array(31).fill(0)
+let week = new Array(31).fill(languageData.dayEffects(0, language))
 let books = []
 let effects = [];
 let specialTypesList = [
@@ -34,7 +34,7 @@ function isMobile() {
 }
 
 document.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
+   // event.preventDefault();
 });
 
 document.addEventListener('dragstart', (event) => {
@@ -313,23 +313,24 @@ function updateNewGameText() {
 const weeksContainer = document.querySelector(".weeks-container");
 const currentYear = document.querySelector(".currentYear");
 const currentMonth = document.querySelector(".currentMonth");
-const emptyBorder = document.querySelector('.empty-border');
 const continueVocab = document.querySelector('.continue-vocab');
 const moneyBorder = document.querySelector('.money-border');
 const moneySprite = document.querySelector('.money-sprite');
 const goalVocab = document.querySelector('.goal-vocab');
 const dayDescContainer = document.querySelector('.dayDesc');
-
+const booksBorder = document.querySelector('.books-border');
 
 function createdayDesc(container) {
    // if (!container) return;
-    let dayDate = week[calendar[2]-1]
-    console.log(dayDate )
-    let iconIndex = 0
-    if (dayDate > 0) {
-     iconIndex = dayDate 
-    } 
-    let dayData = languageData.dayEffects(dayDate, language);
+   // let dayDate = week[calendar[2]-1]
+    let iconIndex = week[calendar[2]-1][0]
+    let name = week[calendar[2]-1][1]
+    let desc = week[calendar[2]-1][2]
+    //let iconIndex = 0
+    //if (dayDate > 0) {
+    // iconIndex = dayDate 
+    //} 
+   // let dayData = languageData.dayEffects(dayDate, language);
     // Ensure the container has the right class
     container.classList.add("dayDesc");
     container.style.position = "absolute";
@@ -360,7 +361,7 @@ function createdayDesc(container) {
         dayName.classList.add("dayDesc-name");
         container.appendChild(dayName);
     }
-    dayName.textContent = dayData[0];
+    dayName.textContent = name;
 
     // Reuse or create description element
     let dayDesc = container.querySelector(".dayDesc-text");
@@ -369,7 +370,7 @@ function createdayDesc(container) {
         dayDesc.classList.add("dayDesc-text");
         container.appendChild(dayDesc);
     }
-    dayDesc.innerHTML = dayData[1];
+    dayDesc.innerHTML = desc;
 }
 
 document.addEventListener('keydown', function (event) {
@@ -390,11 +391,9 @@ function createWeeks() {
     weeksContainer.innerHTML = "";
     let columns = 10;
 
-    for (let index = 0; index < week.length; index++) {
-        if (Math.random() < 0.30) {
-            week[index] = Math.floor(Math.random() * 11) + 1;
-        }
-    }
+
+    week[1] = 1
+    week[30] = 11
 
     for (let i = 0; i <= 34; i++) {
         const cell = document.createElement("div");
@@ -406,12 +405,12 @@ function createWeeks() {
                 cell.style.backgroundColor = `#ffd700`;
             }
             cell.textContent = i + 1;
-            if (week[i] !== 0) {
+            if (week[i][0] !== 0) {
                 const border = document.createElement("div");
                 border.classList.add("dayBorder");
                 cell.appendChild(border);
             }
-            if (week[i] !== 0) {
+            if (week[i][0] !== 0) {
                 const canvas = document.createElement("canvas");
                 canvas.width = 24;
                 canvas.height = 24;
@@ -442,31 +441,23 @@ function createWeeks() {
         weeksContainer.appendChild(cell);
     }
     let containerList = [
-        currentYear, currentMonth, weeksContainer, emptyBorder, moneyBorder,
-        moneySprite, goalVocab, continueVocab, dayDescContainer]
+        currentYear, currentMonth, weeksContainer, moneyBorder,
+        moneySprite, goalVocab, continueVocab, dayDescContainer, booksBorder]
     changeHiddenState(containerList, "show");
-
-    emptyBorder.style.transform = `translate(-7%, -1075%)`;
-    moneyBorder.style.transform = `translate(-68%, -1075%)`;
-    moneyBorder.style.borderRadius = "0px 10px 10px 0px";
-    emptyBorder.style.borderRadius = "10px 0 0px 10px";
-
+  //  moneyBorder.style.transform = `translate(-68%, -1075%)`;
+  //  moneyBorder.style.borderRadius = "0px 10px 10px 0px";
     containerList.forEach(element => {
         element.style.transition = 'opacity 0.3s ease-out'
     });
-
     createContinue();
     createCalendar();
     createGoal();
     updateMoneyDisplay(0);
     createdayDesc(dayDescContainer)
-
-
     setTimeout(() => {
         containerList.forEach(element => {
             element.style.opacity = "1"
         });
-        // Fade in all week items
         document.querySelectorAll(".weeks-item").forEach((item) => {
             item.style.opacity = "1";
         });
@@ -498,7 +489,7 @@ function updateEffectIcons(i) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, 24, 24);
     if (week[i] !== null) {
-        let index = week[i]-1;
+        let index = week[i];
         let spriteX = (index % columns) * 24;
         let spriteY = Math.floor(index / columns) * 24;
         ctx.drawImage(spritesheets.dayEffects, spriteX, spriteY, 24, 24, 0, 0, 24, 24);
@@ -512,6 +503,46 @@ function createContinue() {
     continueText.textContent = languageData.vocab(language).continue;
     continueVocab.appendChild(continueText);
 }
+
+continueVocab.addEventListener('click', function (event) {
+    playAudio('/SFX/System_Ok.ogg');
+    playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
+
+    let containerList = [
+        currentYear, currentMonth, weeksContainer, moneyBorder,
+        moneySprite, goalVocab, continueVocab, dayDescContainer, booksBorder
+    ];
+    containerList.forEach(element => {
+        element.style.transition = 'opacity 0.3s ease-out';
+    });
+
+    setTimeout(() => {
+        containerList.forEach(element => {
+            element.style.opacity = "0";
+        });
+        document.querySelectorAll(".weeks-item").forEach((item) => {
+            item.style.opacity = "0";
+        });
+
+        continueVocab.addEventListener("transitionend", function () {
+            continueVocab.classList.add('hidden');
+            changeHiddenState(containerList, "hide");
+
+            // 🔴 Second setTimeout: Runs 500ms (0.5s) after the first setTimeout finishes
+            setTimeout(() => {
+                startGame()
+                playBGM("bgm004.ogg", 0.35)  
+                // Place your additional logic here
+            }, 300);
+
+        }, { once: true });
+
+    }, 10);
+});
+
+
+
+
 
 function createCalendar() {
     if (!currentYear) return;
@@ -613,7 +644,6 @@ function updateGoalPoints(newPoints) {
 
 const shopContainer = document.querySelector(".shop-grid");
 const gridContainer = document.querySelector(".grid-container");
-const gridBorderImage = document.querySelector(".grid-border-image");
 const reRollcanvas = document.createElement("canvas");
 const endDayVocab = document.querySelector('.endDay-vocab');
 const gameTime = document.querySelector('.gameTime');
@@ -624,19 +654,31 @@ const dayCountVocab = document.querySelector('.dayCount-vocab');
 const shopBorder = document.querySelector('.shop-border');
 const shopVocab = document.querySelector('.shop-vocab');
 const buyButton = document.querySelector('.buy-button');
-const booksBorder = document.querySelector('.books-border');
+
 const reRollItem = document.querySelector('.reroll-item');
 const pauseBackground = document.querySelector('.pause-background');
 
 
 function showGameElements() {
-    const elementsList = [
-        gameTime, emptyBorder, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
-        buyButton, gridContainer, gridBorderImage, reRollcanvas, endDayVocab,
-        dayCountVocab, pauseBackground, booksBorder, reRollItem, endayConfirmationVocab,
-        endayConfirmationYes, endayConfirmationNo
+
+    let containerList = [
+        gameTime, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
+        buyButton, gridContainer, reRollcanvas, endDayVocab,
+        dayCountVocab, pauseBackground, reRollItem, endayConfirmationVocab,
+        endayConfirmationYes, endayConfirmationNo, goalVocab
     ];
-    elementsList.forEach(element => element.classList.remove('hidden'));
+    changeHiddenState(containerList, "show");
+  //  moneyBorder.style.transform = `translate(-68%, -1075%)`;
+  //  moneyBorder.style.borderRadius = "0px 10px 10px 0px";
+    containerList.forEach(element => {
+        element.style.transition = 'opacity 0.3s ease-out'
+    });
+    setTimeout(() => {
+        containerList.forEach(element => {
+            element.style.opacity = "1"
+        });
+    }, 10);
+
 
 }
 function startGame() {
@@ -648,58 +690,14 @@ function startGame() {
     shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
     shopContainer.style.gap = `${spacing}px`;
 
-    const spritesheets = {
-        roll: new Image(),
-        numbers: new Image(),
-        colors: new Image(),
-        roman: new Image(),
-        special: new Image(),
-        zul: new Image(),
-        bomb: new Image(),
-    };
 
-    function loadSpritesheets() {
-        const loadPromises = [
-            new Promise((resolve) => {
-                spritesheets.numbers.src = "./assets/Sprites/numbers.png";
-                spritesheets.numbers.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.roman.src = "./assets/Sprites/roman.png";
-                spritesheets.roman.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.colors.src = "./assets/Sprites/colors.png";
-                spritesheets.colors.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.special.src = "./assets/Sprites/special.png";
-                spritesheets.special.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.zul.src = "./assets/Sprites/zul.png";
-                spritesheets.zul.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.bomb.src = "./assets/Sprites/bomb.png";
-                spritesheets.bomb.onload = resolve;
-            }),
-            new Promise((resolve) => {
-                spritesheets.roll.src = "./assets/Sprites/reRollButton.png";
-                spritesheets.roll.onload = resolve;
-            }),
-        ];
-        Promise.all(loadPromises).then(() => {
-            generateShopPieces();
-            generateGridPieces();
-            createReroll();
-            shopVocab()
-            showGameElements()
-        });
-    }
+  
+    generateShopPieces();
+    generateGridPieces();
+    createReroll();
+    shopVocab()
+    showGameElements()
 
-    // 🎮 Load all spritesheets before generating pieces
-    loadSpritesheets();
 
 
 
@@ -791,7 +789,14 @@ function startGame() {
         let offsetX = 0;
         let offsetY = 0;
         ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
-        ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
+        if (spritesheets.reRollButton.complete) {
+            ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67)
+        } else {
+            spritesheets.reRollButton.onload = () => {
+                ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
+            };
+        }
+      //  ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
     }
 
     function createReroll() {
@@ -1193,7 +1198,7 @@ function startGame() {
         }
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-        desc = wrapText(desc, 25);
+        desc = wrapText(desc, 40);
         tooltip.innerText = desc;
         secondaryBackground.appendChild(tooltip);
 

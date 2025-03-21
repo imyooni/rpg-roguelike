@@ -499,7 +499,7 @@ function updateEffectIcons(i) {
 
 function createContinue() {
     const continueText = document.createElement('div');
-    continueText.classList.add('endDay-text');
+    continueText.classList.add('continue-text');
     continueText.textContent = languageData.vocab(language).continue;
     continueVocab.appendChild(continueText);
 }
@@ -646,7 +646,7 @@ const shopContainer = document.querySelector(".shop-grid");
 const gridContainer = document.querySelector(".grid-container");
 const reRollcanvas = document.createElement("canvas");
 const endDayVocab = document.querySelector('.endDay-vocab');
-const gameTime = document.querySelector('.gameTime');
+const gameTimeContainer = document.querySelector('.gameTime');
 const endayConfirmationVocab = document.querySelector('.endayConfirmation-vocab');
 const endayConfirmationYes = document.querySelector('.endayConfirmation-yes');
 const endayConfirmationNo = document.querySelector('.endayConfirmation-no');
@@ -662,10 +662,10 @@ const pauseBackground = document.querySelector('.pause-background');
 function showGameElements() {
 
     let containerList = [
-        gameTime, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,
-        buyButton, gridContainer, reRollcanvas, endDayVocab,
-        dayCountVocab, pauseBackground, reRollItem, endayConfirmationVocab,
-        endayConfirmationYes, endayConfirmationNo, goalVocab
+        gameTimeContainer, moneyBorder, moneySprite, shopContainer, shopBorder, shopVocab,buyButton,
+        gridContainer, reRollcanvas, endDayVocab,dayCountVocab, pauseBackground,
+        reRollItem, endayConfirmationVocab, endayConfirmationYes, endayConfirmationNo, 
+        goalVocab, booksBorder
     ];
     changeHiddenState(containerList, "show");
   //  moneyBorder.style.transform = `translate(-68%, -1075%)`;
@@ -675,7 +675,9 @@ function showGameElements() {
     });
     setTimeout(() => {
         containerList.forEach(element => {
-            element.style.opacity = "1"
+            if (element.className !== "buy-button") {
+              element.style.opacity = "1"
+            } 
         });
     }, 10);
 
@@ -701,18 +703,54 @@ function startGame() {
 
 
 
-    let gameTime = 0; // Initialize time in seconds
+    let gameTime = 15 * 60; // 15 minutes in seconds
     const gameTimeDisplay = document.getElementById('gameTimeDisplay');
-
-    function updateGameTime() {
-        if (gamePaused) return
-        gameTime++; // Increment time by 1 second
-        const minutes = Math.floor(gameTime / 60); // Get minutes
-        const seconds = gameTime % 60; // Get remaining seconds
-        const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; // Format as MM:SS
-        gameTimeDisplay.textContent = timeFormatted; // Update the display
+    let gamePaused = false;
+    let freezeTime = 0; 
+    
+   
+    function updateDisplay() {
+        const minutes = Math.floor(gameTime / 60);
+        const seconds = gameTime % 60;
+        gameTimeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
-    setInterval(updateGameTime, 1000);
+    updateDisplay();
+    const timerInterval = setInterval(updateGameTime, 1000);
+    function updateGameTime() {
+        if (gamePaused || freezeTime > 0) return;
+        if (gameTime > 0) {
+            gameTime--; 
+            updateDisplay();
+        } else {
+            clearInterval(timerInterval);
+            gameTimeDisplay.textContent = "00:00";
+        }
+    }
+    
+    function freezeTimer(duration) {
+        freezeTime += duration; // Add freeze duration to the current freeze time
+        
+        // Add "freeze" class to indicate the freeze visually
+        gameTimeContainer.classList.add("freeze"); 
+    
+        let freezeInterval = setInterval(() => {
+            freezeTime--; // Decrease freeze time
+    
+            // Once the freeze time runs out
+            if (freezeTime <= 0) {
+                clearInterval(freezeInterval); // Stop the interval
+    
+                // Remove the "freeze" class to end the visual freeze indication
+                gameTimeContainer.classList.remove("freeze");
+            }
+        }, 1000);
+    }
+    
+    function restartTimer(newTime) {
+        gameTime = newTime;
+        updateGameTime(); 
+    }
+
 
     // █ refresh shop (testing)
     document.addEventListener('keydown', function (event) {
@@ -789,21 +827,14 @@ function startGame() {
         let offsetX = 0;
         let offsetY = 0;
         ctx.clearRect(0, 0, reRollcanvas.width, reRollcanvas.height);
-        if (spritesheets.reRollButton.complete) {
-            ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67)
-        } else {
-            spritesheets.reRollButton.onload = () => {
-                ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
-            };
-        }
-      //  ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
+        ctx.drawImage(spritesheets.reRollButton, spriteX, spriteY, 34, 67, offsetX, offsetY, 34, 67);
     }
 
     function createReroll() {
         if (!reRollcanvas) {
             reRollcanvas = document.createElement("canvas");
         }
-        reRollButton = document.createElement("div"); // Assign globally
+        reRollButton = document.createElement("div"); 
         reRollButton.classList.add("reroll-item");
 
         Object.assign(reRollButton.style, {
@@ -1083,7 +1114,7 @@ function startGame() {
             [spritesheets.special, 8, true, 0], // rainbow
             [spritesheets.special, 9, true, 0], // updown
             [spritesheets.special, 10, true, 0], // multi
-            [spritesheets.special, 11, 'hide', 0], // ice
+            [spritesheets.special, 11, true, 0], // ice
         ]
         return specialArray[index]
     }
@@ -1450,6 +1481,9 @@ function startGame() {
                 disabledPiece(gridItem)
             }
             return
+        } else if (gridItem.type === 'ice') {
+            updateFreeze(gridItem)
+            return
         } else if (gridItem.type === 'rainbow') {
             if (numbersSize >= 1) {
                 updateRainbow(gridItem)
@@ -1669,6 +1703,14 @@ function startGame() {
         }
     }
 
+    function updateFreeze(piece){
+        piece.enabled = 'empty';
+        piece.canvas.style.transition = "opacity 0.5s";
+        piece.canvas.style.opacity = "0";
+        playFlashAnimation(piece.element, 'rgba(72, 249, 255, 0.8)', 'rgba(129, 236, 255, 0.5)')
+        playAudio('/SFX/System_Freeze.ogg');
+        freezeTimer(15)
+    }
 
     function updown(item) {
         item.enabled = 'empty';

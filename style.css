@@ -376,10 +376,10 @@ html {
 
 .books-border {
     position: absolute;
-    width: 152px;
-    height: 45px;
-    left: 30%;
-    top: 93.8%;
+    width: 200px;
+    height: 70px;
+    transform: translateX(0%);
+    bottom: -1px;
     background-color: #2b2d42;
     color: #acd468;
     display: flex;
@@ -409,7 +409,6 @@ html {
     width: 100px;
     height: 32px;
     background-color: #614b10;
-    color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -417,6 +416,7 @@ html {
     font-family: 'DefaultFont';
     font-size: 16px;
     z-index: 100;
+    color: #7a7a7a;
     border: 1px solid black;
     border-radius: 10px 0 0 10px;
     user-select: none;
@@ -431,7 +431,6 @@ html {
 
 
 .continue-text {
-    color: white;
     font-size: 16px;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
@@ -439,12 +438,12 @@ html {
 
 
 .continue-vocab:hover {
-    opacity: 1.0;
     background-color: #ffe23b;
+    color: #ffffff;
 }
 
 .continue-vocab:hover .continue-text {
-    color: gold;
+    color: #ffffff;
 }
 
 .element-flash {
@@ -517,10 +516,16 @@ html {
         -1px 1px 0px black;
 }
 
+.gameTime.freeze {
+    background-color: #195a79;
+    color: rgb(0, 255, 242);
+}
+
+
 .dayCount-vocab {
-    position: relative;
-    top: 50%;
-    left: 0%;
+    position: absolute;
+    top: 10%;
+    left: -1px;
     width: 100px;
     height: 60px;
     background-color: #2b2d42;
@@ -726,11 +731,6 @@ html {
 }
 
 
-.grid-item.selected {
-    position: relative;
-}
-
-
 .grid-item.selected::before {
     content: '';
     position: absolute;
@@ -744,22 +744,31 @@ html {
     animation: pieces-anim 500ms infinite alternate;
 }
 
+
+:root {
+    --default-color: #fcd600; 
+}
+
+/* Keyframe animation using the dynamic color variable */
 @keyframes pieces-anim {
     0% {
-        border-color: #fc2600;
+        border-color: var(--default-color);
     }
-
     25% {
         border-color: #ffffff;
     }
-
     50% {
-        border-color: #fc2600;
+        border-color: var(--default-color);
     }
-
     100% {
         border-color: #ffffff;
     }
+}
+
+.grid-item.selected {
+    box-shadow: 0 0 10px 2px var(--default-color); /* Use box-shadow to create a border-like effect */
+    animation: pieces-anim 1s infinite; /* 1s duration, infinite loop */
+    box-sizing: border-box;
 }
 
 
@@ -875,8 +884,11 @@ html {
 }
 
 .shop-item.selected {
-    position: relative;
+    box-shadow: 0 0 10px 2px var(--default-color); /* Use box-shadow to create a border-like effect */
+    animation: pieces-anim 1s infinite; /* 1s duration, infinite loop */
+    box-sizing: border-box;
 }
+
 
 .shop-item.selected::before {
     content: '';
@@ -900,7 +912,6 @@ html {
     display: flex;
     image-rendering: pixelated;
     z-index: 1;
-    /* Reduced z-index */
 }
 
 .money-border {
@@ -949,11 +960,11 @@ html {
     background-image: url('./assets/Sprites/buyButton.png');
     background-size: 24px 24px;
     background-repeat: no-repeat;
-    background-position: 1px center;
-    bottom: -5%;
-    left: 71%;
-    width: 26px;
-    height: 26px;
+    background-position: 2px center;
+    bottom: 23%;
+    left: 69.5%;
+    width: 28px;
+    height: 28px;
     background-color: #2b2d42;
     display: flex;
     justify-content: center;

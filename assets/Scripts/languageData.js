@@ -38,7 +38,7 @@ export function dayEffects(index, language) {
     "bookDay",
     "sickDay",
     "sunnyDay",
-    "randomDay",
+    "energyDay",
     "moneyDay",
     "shuffleDay",
     "colorDay",
@@ -54,7 +54,7 @@ export function dayEffects(index, language) {
       bookDay: [1,"Library",`You can select a new book today.`],
       sickDay: [2,"Sickness",`You will lose&nbsp;<span style="color: red;">-5%</span>&nbsp;of your money.`],
       sunnyDay: [3,"Sunny Day",`You will get&nbsp;<span style="color: GreenYellow;">+5%</span>&nbsp;extra money today.`],
-      randomDay: [4,"Random Day",`Not yet.`],
+      energyDay: [4,"Long Day",`Start the day with extra time.`],
       moneyDay: [5,"Money In My Pockets",`Your current money increases by&nbsp;<span style="color: Gold;">+3%</span>&nbsp;.`],
       shuffleDay: [6,"An Extra Chance", "Start the day with an extra re-roll."],
       colorDay: [7,"Rubik's Cube", `&nbsp;<span style="color: gold;">Color</span>&nbsp;pieces are more common today.`],
@@ -74,7 +74,7 @@ export function dayEffects(index, language) {
         "화창한 날",
         `오늘 돈을&nbsp;<span style="color: green;">+5%</span>&nbsp; 더 얻을 수 있습니다.`
       ],
-      randomDay: [
+      energyDay: [
         "Random Day",
         `Not yet.`
       ],

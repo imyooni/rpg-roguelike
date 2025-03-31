@@ -531,7 +531,7 @@ continueVocab.addEventListener('click', function (event) {
             // 🔴 Second setTimeout: Runs 500ms (0.5s) after the first setTimeout finishes
             setTimeout(() => {
                 startGame()
-                playBGM("bgm004.ogg", 0.35)  
+                playBGM("bgm004.mp3", 0.35)  
                 // Place your additional logic here
             }, 300);
 

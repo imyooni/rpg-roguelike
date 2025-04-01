@@ -12,6 +12,7 @@ let shopItems = [];
 let tooltip;
 let gridItems = []
 let gridSize = 8;
+let rowSize = 8;
 let cellSize = 36;
 let spacing = 4;
 let reRolls = 2;
@@ -68,7 +69,7 @@ async function initAudio(globalVolume = 0.75) {
 }
 
 async function loadAudio(filePath) {
-    if (audioBuffers.has(filePath)) return; // Already loaded
+    if (audioBuffers.has(filePath)) return; 
     await initAudio();
     try {
         const response = await fetch(`./assets/Audio/${filePath}`);
@@ -87,15 +88,10 @@ async function playAudio(filePath, volume = 1) {
     }
     const buffer = audioBuffers.get(filePath);
     if (!buffer) return;
-
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
-
-    // Create a separate gain node for this sound
     const soundGainNode = audioContext.createGain();
-    soundGainNode.gain.value = volume; // Set individual volume
-
-    // Connect the source -> individual gain -> global gain -> output
+    soundGainNode.gain.value = volume; 
     source.connect(soundGainNode);
     soundGainNode.connect(globalGainNode);
 
@@ -141,14 +137,16 @@ function stopBGM() {
 }
 
 function playFlashAnimation(element, color1, color2) {
-    element.classList.remove('element-flash');
-    void element.offsetWidth;
-    element.style.setProperty('--element-color-start', color1);
-    element.style.setProperty('--element-color-mid', color2);
-    element.classList.add('element-flash');
-    element.addEventListener("animationend", () => {
-        element.classList.remove("element-flash");
-    }, { once: true });
+    if (!element.classList.contains('element-flash')) {
+        element.classList.remove('element-flash');
+        void element.offsetWidth; 
+        element.style.setProperty('--element-color-start', color1);
+        element.style.setProperty('--element-color-mid', color2);
+        element.classList.add('element-flash');
+        element.addEventListener("animationend", () => {
+            element.classList.remove("element-flash");
+        }, { once: true }); 
+    }
 }
 
 
@@ -271,7 +269,6 @@ languageIcon.addEventListener('click', () => {
 const newGameVocab = document.querySelector('.newGame-vocab');
 newGameVocab.addEventListener('click', function (event) {
     if (scene !== 'title') return
-    if (scene === 'game') return
     playAudio('/SFX/System_Ok.ogg');
     playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
     const elementsToHide = [twitchIcon, youtubeIcon, gameTitle, gameLanguage];
@@ -279,7 +276,7 @@ newGameVocab.addEventListener('click', function (event) {
     setTimeout(() => {
         newGameVocab.style.opacity = "0";
     }, 100);
-    scene = 'game'
+    scene = 'weeks'
     newGameVocab.addEventListener("transitionend", function () {
         newGameVocab.classList.add('hidden')
         createWeeks()
@@ -390,11 +387,8 @@ function createWeeks() {
     weeksContainer.style.gap = `1px`;
     weeksContainer.innerHTML = "";
     let columns = 10;
-
-
     week[1] = 1
     week[30] = 11
-
     for (let i = 0; i <= 34; i++) {
         const cell = document.createElement("div");
         cell.classList.add("weeks-item");
@@ -505,9 +499,9 @@ function createContinue() {
 }
 
 continueVocab.addEventListener('click', function (event) {
+    if (scene != "weeks") return
     playAudio('/SFX/System_Ok.ogg');
     playFlashAnimation(event.currentTarget, 'rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.49)');
-
     let containerList = [
         currentYear, currentMonth, weeksContainer, moneyBorder,
         moneySprite, goalVocab, continueVocab, dayDescContainer, booksBorder
@@ -515,7 +509,7 @@ continueVocab.addEventListener('click', function (event) {
     containerList.forEach(element => {
         element.style.transition = 'opacity 0.3s ease-out';
     });
-
+    scene = "game"
     setTimeout(() => {
         containerList.forEach(element => {
             element.style.opacity = "0";
@@ -523,26 +517,16 @@ continueVocab.addEventListener('click', function (event) {
         document.querySelectorAll(".weeks-item").forEach((item) => {
             item.style.opacity = "0";
         });
-
         continueVocab.addEventListener("transitionend", function () {
             continueVocab.classList.add('hidden');
             changeHiddenState(containerList, "hide");
-
-            // 🔴 Second setTimeout: Runs 500ms (0.5s) after the first setTimeout finishes
             setTimeout(() => {
                 startGame()
-                playBGM("bgm004.mp3", 0.35)  
-                // Place your additional logic here
+                playBGM("bgm004.ogg", 0.35)  
             }, 300);
-
         }, { once: true });
-
     }, 10);
 });
-
-
-
-
 
 function createCalendar() {
     if (!currentYear) return;
@@ -570,9 +554,6 @@ function createCalendar() {
     }
     currentMonthText.textContent = `${languageData.months([calendar[1], calendar[2]], language)}`;
 }
-
-
-
 
 function updateMoneyDisplay(value) {
     // Ensure target money does not go below 0
@@ -633,8 +614,8 @@ function createGoal() {
 }
 
 function updateGoalPoints(newPoints) {
-    goalPoints = newPoints;  // Update the variable
-    pointsText.textContent = `$${goalPoints}`; // Update the displayed text
+    goalPoints = newPoints;  
+    pointsText.textContent = `$${goalPoints}`; 
 }
 
 
@@ -684,26 +665,20 @@ function showGameElements() {
 
 }
 function startGame() {
-    gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
-    gridContainer.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
-    gridContainer.style.gap = `${spacing}px`;
+    //gridContainer.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
+   // gridContainer.style.gridTemplateRows = `repeat(${rowSize}, ${cellSize}px)`;
+  //  gridContainer.style.gap = `${spacing}px`;
 
-    shopContainer.style.gridTemplateColumns = `repeat(${3}, ${cellSize}px)`;
-    shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
-    shopContainer.style.gap = `${spacing}px`;
-
-
-  
+  //  shopContainer.style.gridTemplateColumns = `repeat(${5}, ${cellSize}px)`;
+   // shopContainer.style.gridTemplateRows = `repeat(${2}, ${cellSize}px)`;
+   // shopContainer.style.gap = `${spacing}px`;
     generateShopPieces();
     generateGridPieces();
     createReroll();
     shopVocab()
     showGameElements()
 
-
-
-
-    let gameTime = 15 * 60; // 15 minutes in seconds
+    let gameTime = 10 * 60; // 15 minutes in seconds
     const gameTimeDisplay = document.getElementById('gameTimeDisplay');
     let gamePaused = false;
     let freezeTime = 0; 
@@ -780,7 +755,7 @@ function startGame() {
 
     function generateGridPieces() {
         gridContainer.innerHTML = ""
-        for (let i = 0; i < gridSize * gridSize; i++) {
+        for (let i = 0; i < gridSize * rowSize; i++) {
             generatePiece(i, gridContainer, "grid-item", null, true)
         }
     }
@@ -810,7 +785,7 @@ function startGame() {
 
     function generateShopPieces() {
         shopContainer.innerHTML = "";
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 10; i++) {
             generatePiece(i, shopContainer, "shop-item", null, true)
         }
     }
@@ -1229,7 +1204,7 @@ function startGame() {
         }
         let tooltip = document.createElement("div");
         tooltip.classList.add("tooltip");
-        desc = wrapText(desc, 40);
+        desc = wrapText(desc, 30);
         tooltip.innerText = desc;
         secondaryBackground.appendChild(tooltip);
 
@@ -1794,7 +1769,7 @@ function startGame() {
                     newY += dy;
                     if (newX < 0 || newX >= gridSize || newY < 0 || newY >= gridSize) break; // Stop at border
                     let piece = gridItems[newY * gridSize + newX];
-                    if (piece.enabled === 'empty') continue; // ignore empty space
+                 //   if (piece.enabled === 'empty') continue; // ignore empty space
                     explodePiece(piece);
                 }
             }
@@ -1802,7 +1777,7 @@ function startGame() {
     }
 
     function explodePiece(piece) {
-        if (piece.enabled !== 'empty') {
+       if (piece.enabled !== 'empty') {
             if (piece.type === 'bomb') {
                 setTimeout(() => bombExplode(piece, false), 10);
             }
@@ -1816,7 +1791,9 @@ function startGame() {
             piece.canvas.style.transition = "opacity 0.5s";
             piece.canvas.style.opacity = "0";
             playFlashAnimation(piece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
-        }
+       } else {
+        playFlashAnimation(piece.element, 'rgba(250, 150, 0, 0.8)', 'rgba(255, 102, 0, 0.5)');
+       }
     }
 
     let pieceBurned = 0

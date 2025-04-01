@@ -846,10 +846,12 @@ html {
     position: absolute;
     bottom: 16%;
     transform: translateX(0%);
-    width: 150px;
+    width: auto;
     height: 100px;
     background-color: #6c584c;
     border-radius: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -860,7 +862,7 @@ html {
 
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(3, 36px);
+    grid-template-columns: repeat(5, 36px);
     grid-template-rows: repeat(2, 36px);
     justify-content: center;
     align-items: center;
@@ -961,8 +963,8 @@ html {
     background-size: 24px 24px;
     background-repeat: no-repeat;
     background-position: 2px center;
-    bottom: 23%;
-    left: 69.5%;
+    bottom: 18%;
+    right: 15.5%;
     width: 28px;
     height: 28px;
     background-color: #2b2d42;
@@ -1032,7 +1034,7 @@ html {
     color: white;
     padding: 6px 10px;
     border-radius: 5px;
-    font-size: 16px;
+    font-size: 14px;
     white-space: nowrap;
     z-index: 1000;
     font-family: 'DefaultFont';
